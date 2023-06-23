@@ -1,2 +1,2 @@
-# sergiy mil
-# project milp
+# SERGIY-MIL
+# MILP Solver
