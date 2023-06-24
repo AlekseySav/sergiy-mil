@@ -128,18 +128,18 @@ def nice_print(s):
         for i, v in enumerate(V)))
 
 
-s = Solver()
+# s = Solver()
 
-s.add_var(Variable(False, 2, 5))
-s.add_var(Variable(False, -3, -2))
-s.add_var(Variable(False, -8, 9))
+# s.add_var(Variable(False, 2, 5))
+# s.add_var(Variable(False, -3, -2))
+# s.add_var(Variable(False, -8, 9))
 
-s.objectives = np.array([1, 9, 0], dtype=Number)
+# s.objectives = np.array([1, 9, 0], dtype=Number)
+
+# # nice_print(s)
+# s.normalize()
+
+# s.add_constraint(np.array([1, 2, 3], dtype=Number), 6)
+# s.add_constraint(np.array([1, 3, 7], dtype=Number), 3)
 
 # nice_print(s)
-s.normalize()
-
-s.add_constraint(np.array([1, 2, 3], dtype=Number), 6)
-s.add_constraint(np.array([1, 3, 7], dtype=Number), 3)
-
-nice_print(s)
