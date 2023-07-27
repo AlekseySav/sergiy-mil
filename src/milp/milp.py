@@ -106,49 +106,79 @@
 #     solver.Maximize("x + 10 * y")
 #
 #     solver.__print__()
+import math
+from copy import copy
+
+import numpy as np
 
 from src.tableau import Tableau
 from src.lp.lp import solve_lp
 from collections.abc import Callable
+from src.milp.heuristic import func_get_tableau, func_get_axis
+
+def __is_int__(x, delta=1 / 1000000):
+    return abs(x - round(x)) < delta
 
 
 def __split_subdivision__(problem: Tableau, var_index: int) -> list[Tableau]:
-    ...
+    p1 = copy(problem)
+    p2 = copy(problem)
+    n = problem.count
+    constraint1 = np.zeros(n + 1)
+    constraint2 = np.zeros(n + 1)
+    constraint1[var_index] = 1  # x <= [value]
+    constraint2[var_index] = -1 # x >= [value] + 1 <=> -x <= -[value] - 1
+    row_index = -1
+    for row, var in enumerate(problem.basis):
+        if var == var_index:
+            row_index = row
+    assert row_index != -1
+    value = math.floor(problem.matrix[row_index, -1])
+    constraint1[-1] = value
+    constraint2[-1] = -value - 1
+    p1.add_constraint(constraint1)
+    p2.add_constraint(constraint2)
+    return [p1, p2]
 
 
-def __get_solution__(problem: Tableau, constraints: list[bool]) -> list[float]:
-    ...
+def __get_solution__(problem: Tableau) -> list[float]:
+    # first n columns in Tableau's matrix are correspondant to initial variables
+    n = problem.count
+    solution = [0.0 for _ in range(n)]
+    for row, x in enumerate(problem.basis):
+        if x < n:
+            solution[x] = problem.matrix[row, -1]
+    return solution
 
 
 def __check_solution__(problem: Tableau, constraints: list[bool]) -> list[bool]:
-    ...
-
-
-def __is_infeasible__(problem: Tableau) -> list[bool]:
-    ...
+    solution = __get_solution__(problem)
+    return [not constraint or __is_int__(value)
+            for constraint, value in zip(constraints, solution)]
 
 
 def solve_milp(problem: Tableau, constraints: list[bool],
-               get_tableau: Callable[[list[Tableau], list[bool]], Tableau],
-               get_axis: Callable[[Tableau, list[bool]], int]) -> float:
+               get_tableau: func_get_tableau,
+               get_axis: func_get_axis) -> float:
     z_lower = float('-inf')
     z_upper = float('-inf')
     subdivisions = [problem]
     while len(subdivisions):
         problem = get_tableau(subdivisions, constraints)
         subdivisions.remove(problem)
-        solve_lp(problem)
-        if __is_infeasible__(problem):
+        if not solve_lp(problem):  # TODO : here it may die
+            # the problem is infeasible
             continue
         z = problem.solution()
         z_upper = max(z_upper, z)
         if z <= z_lower:
             continue
-        if all(__check_solution__(problem, constraints)):
+        in_constraints = __check_solution__(problem, constraints)
+        if all(in_constraints):
             z_lower = z
         else:
-            split_index = get_axis(problem, constraints)
-            if split_index is None:
+            split_index = get_axis(problem, in_constraints)
+            if split_index is None:  # TODO : here it may die
                 continue
             subdivisions.append(__split_subdivision__(problem, split_index))
     return z_lower

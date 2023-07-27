@@ -56,5 +56,6 @@ def evaluate(vars: list[Variable], n: int) -> list[Fraction]:
         res.append(pos.value + pos.displacement - neg.value - neg.displacement)
     return res
 
-def solve_lp(problem: Tableau):
+
+def solve_lp(problem: Tableau) -> bool:
     ...
