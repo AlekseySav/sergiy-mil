@@ -1,9 +1,6 @@
-from fractions import Fraction
 from src.lp.lp import Variable
 from src.lp.lp import Column
 from src.lp.lp import Matrix
-from dataclasses import dataclass
-from dataclasses import field
 
 
 class Solver:
@@ -25,15 +22,15 @@ class Solver:
         self.bounds = []
         self.obj_coeffs = []
 
-    def IntVar(self, lower_bound: Fraction | None, upper_bound: Fraction | None, name: str):
+    def IntVar(self, lower_bound: float | None, upper_bound: float | None, name: str):
         self.vars[name] = Variable(True, lower_bound=lower_bound, upper_bound=upper_bound)
         self.vars_column_id[name] = len(self.vars) - 1
 
     def BoolVar(self, name: str):
-        self.vars[name] = Variable(True, lower_bound=Fraction(0), upper_bound=Fraction(1))
+        self.vars[name] = Variable(True, lower_bound=float(0), upper_bound=float(1))
         self.vars_column_id[name] = len(self.vars) - 1
 
-    def NumVar(self, lower_bound: Fraction | None, upper_bound: Fraction | None, name: str):
+    def NumVar(self, lower_bound: float | None, upper_bound: float | None, name: str):
         self.vars[name] = Variable(False, lower_bound=lower_bound, upper_bound=upper_bound)
         self.vars_column_id[name] = len(self.vars) - 1
 
@@ -43,23 +40,23 @@ class Solver:
 
     def Add(self, constraint: str, constr=True):
         constraint_parts = constraint.split()
-        new_constraint = [Fraction(0) for _ in range(len(self.vars))]
+        new_constraint = [float(0) for _ in range(len(self.vars))]
         mult = 1
         if constr:
             if constraint_parts[-2] == ">=":
                 mult = -1
-            self.bounds.append(mult * Fraction(constraint_parts[-1]))
+            self.bounds.append(mult * float(constraint_parts[-1]))
             constraint_parts = constraint_parts[:-2]
 
         for i in range(len(constraint_parts)):
             substr = constraint_parts[i]
             if substr in self.vars_column_id.keys():
                 if i == 0 or constraint_parts[i - 1] == "+":
-                    new_constraint[self.vars_column_id[substr]] = mult * Fraction(1)
+                    new_constraint[self.vars_column_id[substr]] = mult * float(1)
                 elif constraint_parts[i - 1] == "-":
-                    new_constraint[self.vars_column_id[substr]] = mult * Fraction(-1)
+                    new_constraint[self.vars_column_id[substr]] = mult * float(-1)
                 elif constraint_parts[i - 1] == "*":
-                    new_constraint[self.vars_column_id[substr]] = mult * Fraction(constraint_parts[i - 2])
+                    new_constraint[self.vars_column_id[substr]] = mult * float(constraint_parts[i - 2])
 
         if constr:
             self.constraight_coeffs.append(new_constraint)
