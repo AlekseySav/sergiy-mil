@@ -1,5 +1,5 @@
 import numpy as np
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 '''
@@ -10,9 +10,9 @@ Problem:
         x, y >= 0
 
 Setup:
-    t = Tabletau(func=array([7, 6]))
-    t.add_constraint([2, 4, 16])            # 2x + 4y <= 16
-    t.add_constraint([3, 2, 0, 12])         # 3x + 2y <= 12
+    t = Tableau(func=array([7, 6]))
+    t.add_constraint(array([2, 4, 16]))            # 2x + 4y <= 16
+    t.add_constraint(array([3, 2, 0, 12]))         # 3x + 2y <= 12
                             ^~~~~~~~ s1
 Result after setup:
     func        7  6  0  0
