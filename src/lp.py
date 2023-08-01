@@ -68,8 +68,9 @@ def solve_lp(t: Tableau) -> None:
     while (col := optimal_bfs_test(t)) is not None:
         row = min_ratio_test(t, col)
         if row is None:
-            return None
+            return False
         normilize(t, row, col)
+    return True
 
 
 
