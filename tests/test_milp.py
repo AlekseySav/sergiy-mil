@@ -1,3 +1,6 @@
+import numpy as np
+from src.milp.milp import _split_subdivision
+
 from tableau import Tableau, array
 
 '''
@@ -22,7 +25,11 @@ Result after setup:
 
 
 def test_split_subdivision():
-    t = Tableau(func=array([7, 6]))
-    t.add_constraint(array([2, 4, 16]))  # 2x + 4y <= 16
-    t.add_constraint(array([3, 2, 0, 12]))  # 3x + 2y <= 12
-    t = Tableau.from_matrix
+    t = Tableau.from_matrix(matrix=array([
+        [0, 1, 0, 5, 6],
+        [1, 0, 0, 7, 8],
+        [0, 0, 1, 9, 10]
+    ]), basis=[0, 1, 2],
+        func=array([3, 4, 5, 0]))
+    res = _split_subdivision(t, 0)
+    assert len(res) == 2
