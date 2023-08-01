@@ -126,7 +126,7 @@ def _subdivision(problem: Tableau, var_index: int, less: bool) -> Tableau:
 
     new_problem = deepcopy(problem)
 
-    constraint = np.zeros(problem.variables_count + 1)
+    constraint = np.zeros(problem.variables_count + 1, dtype=np.float64)
     constraint[var_index] = 1 if less else -1
     constraint[-1] = value if less else -value - 1
     constraint = constraint - problem.matrix[row_index] if less else constraint + problem.matrix[row_index]

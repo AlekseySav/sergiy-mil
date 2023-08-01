@@ -33,7 +33,7 @@ def test_is_int():
     assert not _is_int(31123.2123121)
 
 
-def test_split_subdivision():
+def test_split_subdivision_simple():
     t = Tableau.from_matrix(matrix=array([
         [0, 1, 0, 5, 6],
         [1, 0, 0, 7, 8],
@@ -56,5 +56,36 @@ def test_split_subdivision():
         [0, 0, 0, 7, 1, -1]
     ]), basis=[1, 0, 2, 4],
         func=array([3, 4, 5, 0, 0]))
+    for t_new in [t1, t2]:
+        assert t_new in res
+
+
+def test_split_subdivision_non_integer():
+    t = Tableau.from_matrix(matrix=array([
+        [0, 1, 0, 5, 6.001],
+        [1, 0, 0, 7, 8.001],
+        [0, 0, 1, 9, 10]
+    ]), basis=[1, 0, 2],
+        func=array([3, 4, 5, 0]))
+    res = _split_subdivision(t, 0)
+    assert len(res) == 2
+    t1 = Tableau.from_matrix(matrix=array([
+        [0, 1, 0, 5, 0, 6.001],
+        [1, 0, 0, 7, 0, 8.001],
+        [0, 0, 1, 9, 0, 10],
+        [0, 0, 0, -7, 1, -0.001]
+    ]), basis=[1, 0, 2, 4],
+        func=array([3, 4, 5, 0, 0]))
+    t2 = Tableau.from_matrix(matrix=array([
+        [0, 1, 0, 5, 0, 6.001],
+        [1, 0, 0, 7, 0, 8.001],
+        [0, 0, 1, 9, 0, 10],
+        [0, 0, 0, 7, 1, -0.999]
+    ]), basis=[1, 0, 2, 4],
+        func=array([3, 4, 5, 0, 0]))
+    t.print()
+    for x in res:
+        x.print()
+
     for t_new in [t1, t2]:
         assert t_new in res
