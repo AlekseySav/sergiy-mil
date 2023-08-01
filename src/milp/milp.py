@@ -107,32 +107,29 @@
 #
 #     solver.__print__()
 import math
-from copy import copy
+from copy import deepcopy
 
 import numpy as np
 
 from src.tableau import Tableau
-from src.lp.lp import solve_lp
+from src.lp import solve_lp
 from src.milp.heuristic import func_get_tableau, func_get_axis
 
 
-def __is_int__(x, delta=1 / 1000000):
+def _is_int(x, delta=1 / 1000000):
     return abs(x - round(x)) < delta
 
 
-def __split_subdivision__(problem: Tableau, var_index: int) -> list[Tableau]:
-    p1 = copy(problem)
-    p2 = copy(problem)
-    n = problem.count
+def _split_subdivision(problem: Tableau, var_index: int) -> list[Tableau]:
+    p1 = deepcopy(problem)
+    p2 = deepcopy(problem)
+    n = problem.variables_count
     constraint1 = np.zeros(n + 1)
     constraint2 = np.zeros(n + 1)
     constraint1[var_index] = 1   # x <= [value]
     constraint2[var_index] = -1  # x >= [value] + 1 <=> -x <= -[value] - 1
-    row_index = -1
-    for row, var in enumerate(problem.basis):
-        if var == var_index:
-            row_index = row
-    assert row_index != -1
+
+    row_index = problem.basis.index(var_index)
     value = math.floor(problem.matrix[row_index, -1])
     constraint1[-1] = value
     constraint2[-1] = -value - 1
@@ -141,9 +138,9 @@ def __split_subdivision__(problem: Tableau, var_index: int) -> list[Tableau]:
     return [p1, p2]
 
 
-def __get_solution__(problem: Tableau) -> list[float]:
-    # first n columns in Tableau's matrix are correspondant to initial variables
-    n = problem.count
+def _get_solution(problem: Tableau, constraints: list[bool]) -> list[float]:
+    # first n columns in Tableau's matrix correspond to initial variables
+    n = len(constraints)
     solution = [0.0 for _ in range(n)]
     for row, x in enumerate(problem.basis):
         if x < n:
@@ -151,9 +148,9 @@ def __get_solution__(problem: Tableau) -> list[float]:
     return solution
 
 
-def __check_solution__(problem: Tableau, constraints: list[bool]) -> list[bool]:
-    solution = __get_solution__(problem)
-    return [not constraint or __is_int__(value)
+def _check_solution(problem: Tableau, constraints: list[bool]) -> list[bool]:
+    solution = _get_solution(problem, constraints)
+    return [not constraint or _is_int(value)
             for constraint, value in zip(constraints, solution)]
 
 
@@ -163,7 +160,7 @@ def solve_milp(problem: Tableau, constraints: list[bool],
     z_lower = float('-inf')
     z_upper = float('-inf')
     subdivisions = [problem]
-    while len(subdivisions):
+    while subdivisions:
         problem = get_tableau(subdivisions, constraints)
         subdivisions.remove(problem)
         if not solve_lp(problem):  # TODO : here it may die
@@ -173,12 +170,12 @@ def solve_milp(problem: Tableau, constraints: list[bool],
         z_upper = max(z_upper, z)
         if z <= z_lower:
             continue
-        in_constraints = __check_solution__(problem, constraints)
+        in_constraints = _check_solution(problem, constraints)
         if all(in_constraints):
             z_lower = z
         else:
             split_index = get_axis(problem, in_constraints)
             if split_index is None:  # TODO : here it may die
                 continue
-            subdivisions.append(__split_subdivision__(problem, split_index))
+            subdivisions.append(_split_subdivision(problem, split_index))
     return z_lower
