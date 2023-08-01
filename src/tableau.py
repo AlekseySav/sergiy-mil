@@ -38,6 +38,10 @@ class Tableau:
         self.func = func
         self.matrix = np.empty(shape=(0, func.size + 1), dtype=np.float32)
 
+    @classmethod
+    def from_matrix(cls, matrix, basis, func):
+        return cls(matrix, basis, func)
+
     @property
     def count(self) -> int:
         return self.func.size
