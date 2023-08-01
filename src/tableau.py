@@ -63,6 +63,14 @@ class Tableau:
         self.basis.append(self.variables_count)
         self.func = np.append(self.func, 0)
 
+    def __eq__(self, other):
+        '''
+        TODO: add rtol, atol to np.isclose
+        '''
+        return (self.basis == other.basis and
+                self.func == other.func and
+                False not in np.isclose(self.matrix, other.matrix))
+
     # temporary
     def print(self) -> None:
         print()
