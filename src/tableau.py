@@ -69,7 +69,7 @@ class Tableau:
         '''
         return (self.basis == other.basis and
                 self.func == other.func and
-                False not in np.isclose(self.matrix, other.matrix))
+                all(np.isclose(self.matrix, other.matrix)))
 
     # temporary
     def print(self) -> None:
