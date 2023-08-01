@@ -40,7 +40,10 @@ class Tableau:
 
     @classmethod
     def from_matrix(cls, matrix, basis, func):
-        return cls(matrix, basis, func)
+        t = cls(func)
+        t.basis = basis
+        t.matrix = matrix
+        return t
 
     @property
     def count(self) -> int:
