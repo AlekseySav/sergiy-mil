@@ -24,7 +24,7 @@ Result after setup:
 
 
 def array(data=()) -> np.ndarray:
-    return np.array(object=data, dtype=np.float32)
+    return np.array(object=data, dtype=np.float64)
 
 
 @dataclass
@@ -36,7 +36,7 @@ class Tableau:
     def __init__(self, func) -> None:
         self.basis = []
         self.func = func
-        self.matrix = np.empty(shape=(0, func.size + 1), dtype=np.float32)
+        self.matrix = np.empty(shape=(0, func.size + 1), dtype=np.float64)
 
     @classmethod
     def from_matrix(cls, matrix, basis, func):
@@ -49,7 +49,7 @@ class Tableau:
     def variables_count(self) -> int:
         return self.func.size
 
-    def solution(self) -> np.float32:
+    def solution(self) -> np.float64:
         res = 0
         for row, x in enumerate(self.basis):
             res += self.func[x] * self.matrix[row, -1]
