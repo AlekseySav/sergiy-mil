@@ -1,6 +1,6 @@
 import numpy as np
-from src.milp.milp import _split_subdivision, _is_int
-
+from src.milp.milp import _split_subdivision, _is_int, _get_solution, _check_solution, solve_milp
+from src.milp.heuristic import gt_simple, ga_simple
 from tableau import Tableau, array
 
 '''
@@ -83,9 +83,52 @@ def test_split_subdivision_non_integer():
         [0, 0, 0, 7, 1, -0.999]
     ]), basis=[1, 0, 2, 4],
         func=array([3, 4, 5, 0, 0]))
-    t.print()
-    for x in res:
-        x.print()
-
     for t_new in [t1, t2]:
         assert t_new in res
+
+
+def test_get_solution():
+    t = Tableau.from_matrix(matrix=array([
+        [0, 1, 0, 5, 6],
+        [1, 0, 0, 7, 8],
+        [0, 0, 1, 9, 10]
+    ]), basis=[1, 0, 2],
+        func=array([3, 4, 5, 0]))
+    res = _get_solution(t, [False, False, False])
+    assert len(res) == 3
+    assert res == [8, 6, 10]
+
+
+def test_check_solution_correct_case():
+    t = Tableau.from_matrix(matrix=array([
+        [0, 1, 0, 5, 6.5],
+        [1, 0, 0, 7, 8],
+        [0, 0, 1, 9, 10]
+    ]), basis=[1, 0, 2],
+        func=array([3, 4, 5, 0]))
+    res = _check_solution(t, [True, False, True])
+    assert len(res) == 3
+    assert all(res)
+
+
+def test_check_solution_wrong_case():
+    t = Tableau.from_matrix(matrix=array([
+        [0, 1, 0, 5, 6],
+        [1, 0, 0, 7, 8.5],
+        [0, 0, 1, 9, 10]
+    ]), basis=[1, 0, 2],
+        func=array([3, 4, 5, 0]))
+    res = _check_solution(t, [True, False, True])
+    assert len(res) == 3
+    assert not all(res)
+
+
+def test_milp_simple():
+    t = Tableau(func=array([5, 8]))
+    t.add_constraint(array([1, 1, 6]))
+    t.add_constraint(array([5, 9, 0, 45]))
+    t.add_constraint(array([-1, 0, 0, 0, 0]))
+    t.add_constraint(array([0, -1, 0, 0, 0, 0]))
+    t.print()
+    constraints = [True, True]
+    res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)

@@ -163,6 +163,8 @@ def solve_milp(problem: Tableau, constraints: list[bool],
     z_upper = float('-inf')
     subdivisions = [problem]
     while subdivisions:
+        print(len(subdivisions))
+
         problem = get_tableau(subdivisions, constraints)
         subdivisions.remove(problem)
         if not solve_lp(problem):  # TODO : here it may die
