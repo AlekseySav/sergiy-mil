@@ -124,7 +124,7 @@ def test_check_solution_wrong_case():
 
 
 def test_milp_simple():
-    t = Tableau(func=array([5, 8]))
+    t = Tableau(func=array([-5, -8]))
     t.add_constraint(array([1, 1, 6]))
     t.add_constraint(array([5, 9, 0, 45]))
     t.add_constraint(array([-1, 0, 0, 0, 0]))
@@ -132,3 +132,4 @@ def test_milp_simple():
     t.print()
     constraints = [True, True]
     res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
+    assert res == 40

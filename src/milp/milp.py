@@ -163,8 +163,6 @@ def solve_milp(problem: Tableau, constraints: list[bool],
     z_upper = float('-inf')
     subdivisions = [problem]
     while subdivisions:
-        print(len(subdivisions))
-
         problem = get_tableau(subdivisions, constraints)
         subdivisions.remove(problem)
         if not solve_lp(problem):  # TODO : here it may die
@@ -181,5 +179,5 @@ def solve_milp(problem: Tableau, constraints: list[bool],
             split_index = get_axis(problem, in_constraints)
             if split_index is None:  # TODO : here it may die
                 continue
-            subdivisions.append(_split_subdivision(problem, split_index))
+            subdivisions += _split_subdivision(problem, split_index)
     return z_lower
