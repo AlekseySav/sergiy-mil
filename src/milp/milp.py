@@ -113,8 +113,8 @@ import numpy as np
 
 from src.tableau import Tableau
 from src.lp.lp import solve_lp
-from collections.abc import Callable
 from src.milp.heuristic import func_get_tableau, func_get_axis
+
 
 def __is_int__(x, delta=1 / 1000000):
     return abs(x - round(x)) < delta
@@ -126,8 +126,8 @@ def __split_subdivision__(problem: Tableau, var_index: int) -> list[Tableau]:
     n = problem.count
     constraint1 = np.zeros(n + 1)
     constraint2 = np.zeros(n + 1)
-    constraint1[var_index] = 1  # x <= [value]
-    constraint2[var_index] = -1 # x >= [value] + 1 <=> -x <= -[value] - 1
+    constraint1[var_index] = 1   # x <= [value]
+    constraint2[var_index] = -1  # x >= [value] + 1 <=> -x <= -[value] - 1
     row_index = -1
     for row, var in enumerate(problem.basis):
         if var == var_index:
