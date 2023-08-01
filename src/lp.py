@@ -1,11 +1,11 @@
 import numpy as np
-from tableau import Tableau, array
+from tableau import Tableau
 
 
 '''
 
 Problem:
-    Min/Max 7x+6y, where
+    Min 7x+6y, where
         2x + 4y <= 16
         3x + 2y <= 12
         x, y >= 0
@@ -35,11 +35,8 @@ def optimal_bfs_test(t: Tableau) -> int | None:
     A_b = t.matrix[:,t.basis]
     z_j = t.matrix.T @ (np.linalg.inv(A_b).T @ c_b)
     r = t.func - z_j[:-1]
-    '''
-    NOTE: should be argmin, >= 0 in the future
-    '''
-    index = r.argmax()
-    return None if r[index] <= 0 else index
+    index = r.argmin()
+    return None if r[index] >= 0 else index
 
 
 # t.basis[x] = column, x = row

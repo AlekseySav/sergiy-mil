@@ -23,15 +23,15 @@ Result after setup:
 '''
 
 
-def array(data=()) -> np.ndarray[np.float32]:
+def array(data=()) -> np.ndarray:
     return np.array(object=data, dtype=np.float32)
 
 
 @dataclass
 class Tableau:
-    matrix: np.matrix[np.float32]
+    matrix: np.ndarray
     basis: list[int]
-    func: np.ndarray[np.float32]
+    func: np.ndarray
 
     def __init__(self, func) -> None:
         self.basis = []
@@ -56,7 +56,7 @@ class Tableau:
         return res
 
     # NOTE: cons must not contain basic variables
-    def add_constraint(self, cons: np.ndarray[np.float32]) -> None:
+    def add_constraint(self, cons: np.ndarray) -> None:
         self.matrix = np.append(self.matrix, values=np.reshape(cons, (1, cons.size)), axis=0)
         self.matrix = np.insert(self.matrix, -1, values=0, axis=1)
         self.matrix[-1, -2] = 1
