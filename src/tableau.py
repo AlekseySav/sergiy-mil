@@ -46,7 +46,7 @@ class Tableau:
         return t
 
     @property
-    def count(self) -> int:
+    def variables_count(self) -> int:
         return self.func.size
 
     def solution(self) -> np.float32:
@@ -60,14 +60,14 @@ class Tableau:
         self.matrix = np.append(self.matrix, values=np.reshape(cons, (1, cons.size)), axis=0)
         self.matrix = np.insert(self.matrix, -1, values=0, axis=1)
         self.matrix[-1, -2] = 1
-        self.basis.append(self.count)
+        self.basis.append(self.variables_count)
         self.func = np.append(self.func, 0)
 
     # temporary
     def print(self) -> None:
         print()
         print(f'{self.func=}')
-        print(f'{self.count=}')
+        print(f'{self.variables_count=}')
         print(f'{self.basis=}')
         print(f'{self.matrix}')
         print(f'{self.solution()=}')
