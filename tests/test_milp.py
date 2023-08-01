@@ -1,5 +1,5 @@
 import numpy as np
-from src.milp.milp import _split_subdivision
+from src.milp.milp import _split_subdivision, _is_int
 
 from tableau import Tableau, array
 
@@ -24,12 +24,37 @@ Result after setup:
 '''
 
 
+def test_is_int():
+    assert _is_int(4)
+    assert _is_int(-4)
+    assert _is_int(0)
+    assert not _is_int(3.2)
+    assert not _is_int(-3.2)
+    assert not _is_int(31123.2123121)
+
+
 def test_split_subdivision():
     t = Tableau.from_matrix(matrix=array([
         [0, 1, 0, 5, 6],
         [1, 0, 0, 7, 8],
         [0, 0, 1, 9, 10]
-    ]), basis=[0, 1, 2],
+    ]), basis=[1, 0, 2],
         func=array([3, 4, 5, 0]))
     res = _split_subdivision(t, 0)
     assert len(res) == 2
+    t1 = Tableau.from_matrix(matrix=array([
+        [0, 1, 0, 5, 0, 6],
+        [1, 0, 0, 7, 0, 8],
+        [0, 0, 1, 9, 0, 10],
+        [0, 0, 0, -7, 1, 0]
+    ]), basis=[1, 0, 2, 4],
+        func=array([3, 4, 5, 0, 0]))
+    t2 = Tableau.from_matrix(matrix=array([
+        [0, 1, 0, 5, 0, 6],
+        [1, 0, 0, 7, 0, 8],
+        [0, 0, 1, 9, 0, 10],
+        [0, 0, 0, 7, 1, -1]
+    ]), basis=[1, 0, 2, 4],
+        func=array([3, 4, 5, 0, 0]))
+    for t_new in [t1, t2]:
+        assert t_new in res

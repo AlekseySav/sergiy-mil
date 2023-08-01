@@ -120,22 +120,24 @@ def _is_int(x, delta=1 / 1000000):
     return abs(x - round(x)) < delta
 
 
-def _split_subdivision(problem: Tableau, var_index: int) -> list[Tableau]:
-    p1 = deepcopy(problem)
-    p2 = deepcopy(problem)
-    n = problem.variables_count
-    constraint1 = np.zeros(n + 1)
-    constraint2 = np.zeros(n + 1)
-    constraint1[var_index] = 1   # x <= [value]
-    constraint2[var_index] = -1  # x >= [value] + 1 <=> -x <= -[value] - 1
-
+def _subdivision(problem: Tableau, var_index: int, less: bool) -> Tableau:
     row_index = problem.basis.index(var_index)
     value = math.floor(problem.matrix[row_index, -1])
-    constraint1[-1] = value
-    constraint2[-1] = -value - 1
-    p1.add_constraint(constraint1)
-    p2.add_constraint(constraint2)
-    return [p1, p2]
+
+    new_problem = deepcopy(problem)
+
+    constraint = np.zeros(problem.variables_count + 1)
+    constraint[var_index] = 1 if less else -1
+    constraint[-1] = value if less else -value - 1
+    constraint = constraint - problem.matrix[row_index] if less else constraint + problem.matrix[row_index]
+
+    new_problem.add_constraint(constraint)
+    return new_problem
+
+
+def _split_subdivision(problem: Tableau, var_index: int) -> list[Tableau]:
+    return [_subdivision(problem, var_index, True),
+            _subdivision(problem, var_index, False)]
 
 
 def _get_solution(problem: Tableau, constraints: list[bool]) -> list[float]:
