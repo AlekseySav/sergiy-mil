@@ -68,7 +68,7 @@ class Tableau:
         TODO: add rtol, atol to np.isclose
         '''
         return (self.basis == other.basis and
-                self.func == other.func and
+                np.allclose(self.func, other.func) and
                 self.matrix.shape == other.matrix.shape and
                 np.allclose(self.matrix, other.matrix))
 
