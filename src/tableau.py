@@ -29,6 +29,14 @@ def array(data=()) -> np.ndarray:
 
 @dataclass
 class Tableau:
+    '''
+    TODO:
+        - remove __init__
+        - remove from_matrix
+        - remove print()
+        - add nice formatting
+    '''
+
     matrix: np.ndarray
     basis: list[int]
     func: np.ndarray
@@ -56,10 +64,10 @@ class Tableau:
         return res
 
     # NOTE: cons must not contain basic variables
-    def add_constraint(self, cons: np.ndarray) -> None:
+    def add_constraint(self, cons: np.ndarray, leq: bool) -> None:
         self.matrix = np.append(self.matrix, values=np.reshape(cons, (1, cons.size)), axis=0)
         self.matrix = np.insert(self.matrix, -1, values=0, axis=1)
-        self.matrix[-1, -2] = 1
+        self.matrix[-1, -2] = 1 if leq else -1
         self.basis.append(self.variables_count)
         self.func = np.append(self.func, 0)
 
