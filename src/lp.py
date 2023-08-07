@@ -67,7 +67,7 @@ def primal_min_ratio_test(t: Tableau, e: int) -> int | None:
     A_b = t.matrix[:,t.basis]
     A_b_inv = np.linalg.inv(A_b)
     b = t.matrix[:,-1]
-    p = (A_b_inv @ b) / (A_b_inv @ A_e)
+    p = np.divide(A_b_inv @ b, A_b_inv @ A_e, np.zeros_like(b), where=A_e != 0)
     '''
     NOTE: case when multiple zeroes (?) when zero (?)
     '''
@@ -108,8 +108,7 @@ def feasible_rhs_test(t: Tableau) -> int | None:
 def dual_min_ratio_test(t: Tableau, e: int) -> int | None:
     A_e = t.matrix[e,:-1]
     p = np.divide(-t.func, A_e, np.full_like(t.func, np.Inf), where=A_e != 0)
-    index = p.argmin()
-    return index
+    return p.argmin()
 
 def make_solution_feasible(t: Tableau) -> None:
     '''
