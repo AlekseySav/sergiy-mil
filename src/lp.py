@@ -1,5 +1,5 @@
 import numpy as np
-from tableau import Tableau
+from src.tableau import Tableau
 
 
 '''

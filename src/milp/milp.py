@@ -112,7 +112,7 @@ from copy import deepcopy
 import numpy as np
 
 from src.tableau import Tableau
-from src.lp import solve_lp
+from src.lp import solve_lp, make_solution_feasible
 from src.milp.heuristic import func_get_tableau, func_get_axis
 
 
@@ -132,6 +132,7 @@ def _subdivision(problem: Tableau, var_index: int, less: bool) -> Tableau:
     constraint = constraint - problem.matrix[row_index] if less else constraint + problem.matrix[row_index]
 
     new_problem.add_constraint(constraint)
+    make_solution_feasible(new_problem)
     return new_problem
 
 
@@ -159,6 +160,21 @@ def _check_solution(problem: Tableau, constraints: list[bool]) -> list[bool]:
 def solve_milp(problem: Tableau, constraints: list[bool],
                get_tableau: func_get_tableau,
                get_axis: func_get_axis) -> float:
+    """
+
+    Solves Mixed Integer Linear Problem in Tableau form.
+
+    #### designations:
+        - A = problem.matrix
+        - basis = problem.basis
+
+    #### requirements:
+        - problem should be feasible, i.e.
+        > basis should correspond to s_i variables
+        > A[:,basis] should be E ( matrix, with main diagonal set to ones)
+        > last column of A >= 0
+
+    """
     z_lower = float('-inf')
     z_upper = float('-inf')
     subdivisions = [problem]
