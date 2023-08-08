@@ -1,8 +1,7 @@
 import numpy as np
 from src.milp.milp import _split_subdivision, _is_int, _get_solution, _check_solution, solve_milp
 from src.milp.heuristic import gt_simple, ga_simple
-from tableau import Tableau, array
-
+from src.tableau import Tableau, array
 '''
 Problem:
     Min/Max 7x+6y, where
