@@ -58,6 +58,7 @@ def optimal_bfs_test(t: Tableau) -> int | None:
     A_b = t.matrix[:,t.basis]
     A_b_inv = np.linalg.inv(A_b)
     z_j = t.matrix.T @ (A_b_inv.T @ c_b)
+    # z_j = t.matrix.T @ c_b
     r = t.func - z_j[:-1]
     index = r.argmin()
     return None if r[index] >= 0 else index
@@ -107,8 +108,9 @@ def feasible_rhs_test(t: Tableau) -> int | None:
 
 def dual_min_ratio_test(t: Tableau, e: int) -> int | None:
     A_e = t.matrix[e,:-1]
-    p = np.divide(-t.func, A_e, np.full_like(t.func, np.Inf), where=A_e != 0)
-    return p.argmin()
+    p = A_e
+    # p = np.divide(-t.func, A_e, np.full_like(t.func, np.Inf), where=A_e != 0)
+    return np.where(p != 0, p, np.inf).argmin()
 
 def make_solution_feasible(t: Tableau) -> None:
     '''
@@ -148,7 +150,6 @@ def solve_lp(t):
 
 
 
-# from tableau import array
 
 # t = Tableau.from_matrix(
 #     matrix=array([
@@ -161,6 +162,12 @@ def solve_lp(t):
 #     func=array([3, 4, 0, 0, 0, 0])
 # )
 
+# from tableau import array
+
+# t = Tableau(func=array([-5, -8]))
+# t.add_constraint(array([1, 1, 6]))
+# t.add_constraint(array([5, 9, 0, 45]))
+
 # t = Tableau.from_matrix(
 #     matrix=array([
 #         [1.,  0.,  2.25, -0.25,  0.,  0.,  0.,  2.25],
@@ -172,5 +179,10 @@ def solve_lp(t):
 #     func=array([-5., -8.,  0.,  0.,  0.,  0.,  0.])
 # )
 
+# t.add_constraint(array([0, 0, 2.25, -0.25, -0.75]), True)
+# make_solution_optimal(t)
+# t.print()
 # make_solution_feasible(t)
+# make_solution_optimal(t) 
+# t.print()
 # print(t.solution())
