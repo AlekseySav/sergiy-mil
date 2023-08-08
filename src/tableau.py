@@ -40,17 +40,20 @@ class Tableau:
     matrix: np.ndarray
     basis: list[int]
     func: np.ndarray
+    variables_constraints: dict[int:list[float]]
 
     def __init__(self, func) -> None:
         self.basis = []
         self.func = func
         self.matrix = np.empty(shape=(0, func.size + 1), dtype=np.float64)
+        self.variables_constraints = {}
 
     @classmethod
     def from_matrix(cls, matrix, basis, func):
         t = cls(func)
         t.basis = basis
         t.matrix = matrix
+        t.variables_constraints = {}
         return t
 
     @property
@@ -88,3 +91,11 @@ class Tableau:
         print(f'{self.basis=}')
         print(f'{self.matrix}')
         print(f'{self.solution()=}')
+
+    def remember_constraint(self, index: int, new_constraint: float, higher: bool):
+        if index not in self.variables_constraints.keys():
+            self.variables_constraints[index] = [0.0, float('+inf')]
+        if higher:
+            self.variables_constraints[index][higher] = min(self.variables_constraints[index][higher], new_constraint)
+        else:
+            self.variables_constraints[index][higher] = max(self.variables_constraints[index][higher], new_constraint)
