@@ -129,4 +129,4 @@ def test_milp_simple():
     t.print()
     constraints = [True, True]
     res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
-    assert res == 40
+    assert res == -40

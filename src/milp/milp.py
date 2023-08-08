@@ -91,7 +91,8 @@
 #     if not solver:
 #         return
 #
-#     infinity = solver.infinity()
+#     infinity = solver.infin    basis_column = t.basis[e]
+#     p[basis_column] = 0ity()
 #     # x and y are integer non-negative variables.
 #     x = solver.IntVar(0.0, infinity, 'x')
 #     y = solver.IntVar(0.0, infinity, 'y')
@@ -132,7 +133,6 @@ def _subdivision(problem: Tableau, var_index: int, less: bool) -> Tableau:
     constraint = constraint - problem.matrix[row_index] if less else constraint + problem.matrix[row_index]
 
     new_problem.add_constraint(constraint)
-    make_solution_feasible(new_problem)
     return new_problem
 
 
@@ -162,7 +162,7 @@ def solve_milp(problem: Tableau, constraints: list[bool],
                get_axis: func_get_axis) -> float:
     """
 
-    Solves Mixed Integer Linear Problem in Tableau form.
+    Solves Mixed Integer Linear minimization Problem in Tableau form.
 
     #### designations:
         - A = problem.matrix
@@ -175,25 +175,31 @@ def solve_milp(problem: Tableau, constraints: list[bool],
         > last column of A >= 0
 
     """
-    z_lower = float('-inf')
-    z_upper = float('-inf')
+    if not solve_lp(problem):
+        return float('+inf')
+    z_lower = problem.solution()
+    z_upper = float('+inf')
     subdivisions = [problem]
     while subdivisions:
         problem = get_tableau(subdivisions, constraints)
         subdivisions.remove(problem)
-        if not solve_lp(problem):  # TODO : here it may die
-            # the problem is infeasible
+        if not make_solution_feasible(problem):
+            # infeasible
             continue
         z = problem.solution()
-        z_upper = max(z_upper, z)
-        if z <= z_lower:
+        z_lower = min(z_lower, z)
+        if z >= z_upper:
             continue
         in_constraints = _check_solution(problem, constraints)
         if all(in_constraints):
-            z_lower = z
+            z_upper = z
+            if z_lower == z_upper:
+                break
+            else:
+                continue
         else:
             split_index = get_axis(problem, in_constraints)
             if split_index is None:  # TODO : here it may die
                 continue
             subdivisions += _split_subdivision(problem, split_index)
-    return z_lower
+    return z_upper
