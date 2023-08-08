@@ -132,6 +132,7 @@ def _subdivision(problem: Tableau, var_index: int, less: bool) -> Tableau:
     constraint[-1] = value if less else -value - 1
     constraint = constraint - problem.matrix[row_index] if less else constraint + problem.matrix[row_index]
 
+    new_problem.remember_constraint(var_index, value + 1 if less else value, not less)
     new_problem.add_constraint(constraint)
     return new_problem
 
@@ -186,7 +187,12 @@ def solve_milp(problem: Tableau, constraints: list[bool],
         if not make_solution_feasible(problem):
             # infeasible
             continue
+        if not solve_lp(problem):
+            # infeasible
+            continue
         z = problem.solution()
+        print(problem.variables_constraints)
+        print(z)
         z_lower = min(z_lower, z)
         if z >= z_upper:
             continue
