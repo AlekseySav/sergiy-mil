@@ -2,6 +2,9 @@ import numpy as np
 from src.milp.milp import _split_subdivision, _is_int, _get_solution, _check_solution, solve_milp
 from src.milp.heuristic import gt_simple, ga_simple
 from src.tableau import Tableau, array
+from tests.or_tools_api import solve_or_tools
+from tests.problem_api import Problem
+
 '''
 Problem:
     Min/Max 7x+6y, where
@@ -126,7 +129,39 @@ def test_milp_simple():
     t = Tableau(func=array([-5, -8]))
     t.add_constraint(array([1, 1, 6]))
     t.add_constraint(array([5, 9, 0, 45]))
-    t.print()
     constraints = [True, True]
     res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
     assert res == -40
+
+
+def test_with_or_tools():
+    p = Problem([[1, 1], [5, 9]], [6, 45], [-5, -8])
+    t = Tableau(func=array([-5, -8]))
+    t.add_constraint(array([1, 1, 6]))
+    t.add_constraint(array([5, 9, 0, 45]))
+    constraints = [True, True]
+    res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
+    or_tools_res = solve_or_tools(p)
+    assert res == or_tools_res
+
+
+def test_from_or_tools_example():
+    p = Problem(
+        [
+            [5, 7, 9, 2, 1],
+            [18, 4, -9, 10, 12],
+            [4, 7, 3, 8, 5],
+            [5, 13, 16, 3, -7],
+        ],
+        [250, 285, 211, 315],
+        [-7, -8, -2, -9, -6]
+    )
+    t = Tableau(func=array([-7, -8, -2, -9, -6]))
+    t.add_constraint(array([5, 7, 9, 2, 1, 250]))
+    t.add_constraint(array([18, 4, -9, 10, 12, 0, 285]))
+    t.add_constraint(array([4, 7, 3, 8, 5, 0, 0, 211]))
+    t.add_constraint(array([5, 13, 16, 3, -7, 0, 0, 0, 315]))
+    constraints = [True, True, True, True, True]
+    my_res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
+    or_tools_res = solve_or_tools(p)
+    assert my_res == or_tools_res
