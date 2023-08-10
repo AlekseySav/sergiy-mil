@@ -18,7 +18,6 @@ class Problem:
         self.num_constraints = len(bounds)
 
     def to_dict(self) -> dict:
-        """Stores the data for the problem."""
         data = {'constraint_coeffs': self.constraint_coeffs, 'bounds': self.bounds, 'obj_coeffs': self.obj_coeffs,
                 'num_vars': self.num_vars, 'num_constraints': self.num_constraints}
         return data
