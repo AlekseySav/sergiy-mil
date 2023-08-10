@@ -1,6 +1,6 @@
 import math
 
-from tests.problem_api import Problem
+from src.problem import Problem
 from tests.value_gen import ValueGenerator
 
 

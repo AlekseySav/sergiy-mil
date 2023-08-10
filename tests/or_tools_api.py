@@ -1,5 +1,5 @@
 from ortools.linear_solver import pywraplp
-from problem_api import Problem
+from src.problem import Problem
 
 
 def solve_or_tools(p: Problem) -> float | None:

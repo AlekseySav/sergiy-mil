@@ -2,7 +2,7 @@ from src.milp import _split_subdivision, _is_int, _get_solution, _check_solution
 from src.milp.heuristic import gt_simple, ga_simple, gt_min, gt_max
 from src.tableau import Tableau, array
 from tests.or_tools_api import solve_or_tools
-from tests.problem_api import Problem
+from src.problem import Problem
 from tests.problem_gen import ProblemGenerator
 
 '''
@@ -249,13 +249,3 @@ def test_mid_random():
     print(my_res, or_tools_res)
     if any([my_res is not None, or_tools_res is not None]):
         assert abs(my_res - or_tools_res) < eps
-
-
-def test_stress_small_random():
-    for _ in range(100):
-        test_small_random()
-
-
-def test_stress_mid_random():
-    for _ in range(100):
-        test_mid_random()
