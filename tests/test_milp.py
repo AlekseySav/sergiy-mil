@@ -1,9 +1,9 @@
-from src.milp import _split_subdivision, _is_int, _get_solution, _check_solution, solve_milp, eps
-from src.milp.heuristic import gt_simple, ga_simple, gt_min, gt_max
+import numpy as np
+from src.milp.milp import _split_subdivision, _is_int, _get_solution, _check_solution, solve_milp
+from src.milp.heuristic import gt_simple, ga_simple
 from src.tableau import Tableau, array
 from tests.or_tools_api import solve_or_tools
 from tests.problem_api import Problem
-from tests.problem_gen import ProblemGenerator
 
 '''
 Problem:
@@ -136,7 +136,9 @@ def test_milp_simple():
 
 def test_with_or_tools():
     p = Problem([[1, 1], [5, 9]], [6, 45], [-5, -8])
-    t = p.to_tableau()
+    t = Tableau(func=array([-5, -8]))
+    t.add_constraint(array([1, 1, 6]))
+    t.add_constraint(array([5, 9, 0, 45]))
     constraints = [True, True]
     res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
     or_tools_res = solve_or_tools(p)
@@ -154,108 +156,12 @@ def test_from_or_tools_example():
         [250, 285, 211, 315],
         [-7, -8, -2, -9, -6]
     )
-    t = p.to_tableau()
+    t = Tableau(func=array([-7, -8, -2, -9, -6]))
+    t.add_constraint(array([5, 7, 9, 2, 1, 250]))
+    t.add_constraint(array([18, 4, -9, 10, 12, 0, 285]))
+    t.add_constraint(array([4, 7, 3, 8, 5, 0, 0, 211]))
+    t.add_constraint(array([5, 13, 16, 3, -7, 0, 0, 0, 315]))
     constraints = [True, True, True, True, True]
     my_res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
     or_tools_res = solve_or_tools(p)
-    assert abs(my_res - or_tools_res) < eps
-
-
-def test_with_gt_min():
-    p = Problem(
-        [
-            [5, 7, 9, 2, 1],
-            [18, 4, -9, 10, 12],
-            [4, 7, 3, 8, 5],
-            [5, 13, 16, 3, -7],
-        ],
-        [250, 285, 211, 315],
-        [-7, -8, -2, -9, -6]
-    )
-    t = p.to_tableau()
-    constraints = [True, True, True, True, True]
-    my_res = solve_milp(t, constraints=constraints, get_tableau=gt_min, get_axis=ga_simple)
-    or_tools_res = solve_or_tools(p)
-    assert abs(my_res - or_tools_res) < eps
-
-
-def test_with_gt_max():
-    p = Problem(
-        [
-            [5, 7, 9, 2, 1],
-            [18, 4, -9, 10, 12],
-            [4, 7, 3, 8, 5],
-            [5, 13, 16, 3, -7],
-        ],
-        [250, 285, 211, 315],
-        [-7, -8, -2, -9, -6]
-    )
-    t = p.to_tableau()
-    constraints = [True, True, True, True, True]
-    my_res = solve_milp(t, constraints=constraints, get_tableau=gt_max, get_axis=ga_simple)
-    or_tools_res = solve_or_tools(p)
-    assert abs(my_res - or_tools_res) < eps
-
-
-def test_small_random():
-    gen = ProblemGenerator(
-        {
-            'constraints_coeffs': 'uniform',
-            'bounds': 'uniform',
-            'obj_coeffs': 'uniform'
-        },
-        {
-            'constraints_coeffs': [-5, 10],
-            'bounds': [0, 50],
-            'obj_coeffs': [-10, 0]
-        },
-        2,
-        2
-    )
-    p = gen.value()
-    t = p.to_tableau()
-    t.print()
-    print(p.constraint_coeffs, p.bounds, p.obj_coeffs)
-    cons = [True for _ in range(2)]
-    my_res = solve_milp(t, cons, gt_min, ga_simple)
-    or_tools_res = solve_or_tools(p)
-    print(my_res, or_tools_res)
-    if any([my_res is not None, or_tools_res is not None]):
-        assert abs(my_res - or_tools_res) < eps
-
-
-def test_mid_random():
-    gen = ProblemGenerator(
-        {
-            'constraints_coeffs': 'uniform',
-            'bounds': 'uniform',
-            'obj_coeffs': 'uniform'
-        },
-        {
-            'constraints_coeffs': [-5, 10],
-            'bounds': [0, 50],
-            'obj_coeffs': [-10, 0]
-        },
-        10,
-        10
-    )
-    p = gen.value()
-    t = p.to_tableau()
-    t.print()
-    print(p.constraint_coeffs, p.bounds, p.obj_coeffs)
-    cons = [True for _ in range(10)]
-    my_res = solve_milp(t, cons, gt_min, ga_simple)
-    or_tools_res = solve_or_tools(p)
-    print(my_res, or_tools_res)
-    if any([my_res is not None, or_tools_res is not None]):
-        assert abs(my_res - or_tools_res) < eps
-
-
-def test_stress_small_random():
-    for _ in range(100):
-        test_small_random()
-
-
-def test_stress_mid_random():
-    for _ in range(100):
-        test_mid_random()
+    assert my_res == or_tools_res

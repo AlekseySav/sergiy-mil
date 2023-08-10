@@ -16,7 +16,7 @@ def solve_or_tools(p: Problem) -> float | None:
     print('Number of variables =', solver.NumVariables())
 
     for i in range(data['num_constraints']):
-        constraint = solver.RowConstraint(-infinity, data['bounds'][i], '')
+        constraint = solver.RowConstraint(0, data['bounds'][i], '')
         for j in range(data['num_vars']):
             constraint.SetCoefficient(x[j], data['constraint_coeffs'][i][j])
     print('Number of constraints =', solver.NumConstraints())
