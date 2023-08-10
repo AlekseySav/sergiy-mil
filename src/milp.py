@@ -5,7 +5,7 @@ import numpy as np
 
 from src.tableau import Tableau, array
 from src.lp import solve_lp, make_solution_feasible
-from src.milp.heuristic import func_get_tableau, func_get_axis
+from src.heuristic import func_get_tableau, func_get_axis
 
 eps = 1/1000000000
 
