@@ -39,7 +39,15 @@ def test_tableau():
     assert t.variables_count == 4
     assert t.solution()[0] == 0
     assert np.allclose(t.solution()[1], lp.array([1, 3, 5, -8]))
-
+    t.add_restriction(0, lp.Float(8), lp.ConstraintSign.LEQ)
+    assert np.allclose(t._matrix, lp.array([
+        [1, -4, -5,  0,  0,  0,  0],
+        [0,  1,  2,  3,  0,  0,  1],
+        [0,  4,  5,  6,  0,  0,  3],
+        [0,  7,  8,  9,  0,  0,  5],
+        [0, -1, -5, -3,  1,  0, -8],
+        [0,  1,  0,  0,  0,  1,  8]
+    ]))
 
 '''
 basic tests here
