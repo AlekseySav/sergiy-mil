@@ -1,5 +1,5 @@
 from src.milp import _split_subdivision, _is_int, _get_solution, _check_solution, solve_milp, eps
-from src.milp.heuristic import gt_simple, ga_simple, gt_min, gt_max
+from src.heuristic import gt_simple, ga_simple, gt_min, gt_max
 from src.tableau import Tableau, array
 from tests.or_tools_api import solve_or_tools
 from src.problem import Problem
