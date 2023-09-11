@@ -21,6 +21,12 @@ def test_tableau():
         [0,  4,  5, 6, 3],
         [0,  7,  8, 9, 5]
     ]))
+    p = lp.Tableau.from_matrix(lp.array([
+        [1, 2, 3, 1],
+        [4, 5, 6, 3],
+        [7, 8, 9, 5]
+    ]), [0, 1, 2], lp.array([4, 5, 0]))
+    assert t == p
     t.add_constraint(lp.array([1, 5, 3]), lp.Float(8), lp.ConstraintSign.GEQ)
     assert t._basis == [0, 1, 2, 3, 4]
     assert np.allclose(t._matrix, lp.array([

@@ -61,15 +61,22 @@ class Tableau:
     _basis: list
 
     @classmethod
-    def make(cls, lhs, rhs, objective, basis):
+    def make(cls, lhs: NDArray, rhs: NDArray, objective: NDArray, basis: list):
         objective = np.reshape(np.concatenate(([1], -objective, [0]), dtype=Float), (1, objective.shape[0] + 2))
         rhs = np.reshape(rhs, (rhs.shape[0], 1))
         matrix = np.concatenate((np.zeros_like(rhs), lhs, rhs), axis=1)
         return cls(np.concatenate((objective, matrix)), [0] + list(map(lambda x: x + 1, basis)))
 
+    @classmethod
+    def from_matrix(cls, matrix: NDArray, basis: list, func: NDArray):
+        matrix = np.insert(matrix, 0, array([0]), axis=1)
+        objective = np.concatenate(([-1], func, [0]), dtype=Float)
+        matrix = np.concatenate((np.reshape(-objective, (1, objective.shape[0])), matrix), dtype=Float)
+        return cls(matrix, [0] + list(map(lambda x: x + 1, basis)))
+
     @property
     def variables_count(self) -> int:
-        return self._matrix.shape[1] -2
+        return self._matrix.shape[1] - 2
 
     def add_constraint(self, lhs: NDArray, rhs: Float, sign: ConstraintSign) -> None:
         if sign == ConstraintSign.GEQ:
