@@ -121,7 +121,7 @@ def normalize(t: Tableau, col: int, row: int):
 
 def run_primal_simplex(t: Tableau) -> bool:
     def find_entering_variable(t: Tableau) -> int | None:
-        r = t._matrix[0, :]  # objective coefficients
+        r = t._matrix[0, :-1]  # objective coefficients
         index = int(r.argmin())
         return None if r[index] >= 0 else index
 
