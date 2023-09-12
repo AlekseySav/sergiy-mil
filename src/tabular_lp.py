@@ -93,8 +93,8 @@ class Tableau:
         #   t2.add_restriction(index, np.round(solution + 1), lp.ConstraintSign.GEQ)
         z = np.zeros(self._matrix.shape[1] - 2, dtype=Float)
         z[index] = 1
-        self.add_constraint(z, value, sign)
-        self._matrix[-1] -= self._matrix[index + 1]
+        z -= self._matrix[index + 1, 1:-1]
+        self.add_constraint(z, value - self._matrix[index + 1, -1], sign)
 
     def solution(self) -> tuple[Float, NDArray]:
         r = np.zeros(self.variables_count + 1, dtype=Float)
@@ -172,4 +172,7 @@ make_solution_optimal = run_primal_simplex
 make_solution_feasible = run_dual_simplex
 
 
+t = Tableau(array([[1, 0, 0], [0, 2, 0]]), [0, 1])
+t.add_restriction(0, Float(5), ConstraintSign.GEQ)
+print()
 
