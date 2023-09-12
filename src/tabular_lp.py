@@ -94,6 +94,7 @@ class Tableau:
         z = np.zeros(self._matrix.shape[1] - 2, dtype=Float)
         z[index] = 1
         self.add_constraint(z, value, sign)
+        self._matrix[-1] -= self._matrix[index + 1]
 
     def solution(self) -> tuple[Float, NDArray]:
         r = np.zeros(self.variables_count + 1, dtype=Float)
@@ -169,4 +170,6 @@ def run_dual_simplex(t: Tableau) -> bool:
 
 make_solution_optimal = run_primal_simplex
 make_solution_feasible = run_dual_simplex
+
+
 
