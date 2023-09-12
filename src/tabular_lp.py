@@ -172,7 +172,4 @@ make_solution_optimal = run_primal_simplex
 make_solution_feasible = run_dual_simplex
 
 
-t = Tableau(array([[1, 0, 0], [0, 2, 0]]), [0, 1])
-t.add_restriction(0, Float(5), ConstraintSign.GEQ)
-print()
 
