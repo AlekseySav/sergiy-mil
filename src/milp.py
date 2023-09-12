@@ -35,7 +35,7 @@ def solve_milp(problem: Tableau, constraints: list[bool],
                get_axis: func_get_axis) -> float | None:
     """
 
-    Solves Mixed Integer Linear minimization Problem in Tableau form.
+    Solves Mixed Integer Linear maximization Problem in Tableau form.
 
     #### designations:
         - A = problem.matrix
@@ -51,8 +51,8 @@ def solve_milp(problem: Tableau, constraints: list[bool],
     iteration = 0
     if not make_solution_optimal(problem):
         return None
-    z_lower, _ = problem.solution()
-    z_upper = Float(0)
+    z_upper, _ = problem.solution()
+    z_lower = Float(0)
     subdivisions = [problem]
     while subdivisions:
         iteration += 1
@@ -65,16 +65,16 @@ def solve_milp(problem: Tableau, constraints: list[bool],
         # print(problem.variables_constraints)
         # print(z)
         # print(z_upper)
-        z_lower = min(z_lower, z)
-        if z >= z_upper:
+        z_upper = max(z_upper, z)
+        if z <= z_lower:
             continue
         in_constraints = check_solution(values, constraints)
         if all(in_constraints):
             print()
             print('iteration = ', iteration)
             print('new best solution = ', values[:len(constraints)])
-            z_upper = z # TODO : Check
-            print('solution value (floored small variables)= ', z_upper)
+            z_lower = z # TODO : Check
+            print('solution value (floored small variables)= ', z_lower)
             if z_lower == z_upper:
                 break
             else:
@@ -86,4 +86,4 @@ def solve_milp(problem: Tableau, constraints: list[bool],
             # print('split, index = ', split_index)
             subdivisions += split_subdivision(problem, split_index)
 
-    return z_upper
+    return z_lower

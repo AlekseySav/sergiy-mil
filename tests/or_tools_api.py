@@ -29,7 +29,7 @@ def solve_or_tools(p: Problem) -> float | None:
     objective = solver.Objective()
     for j in range(data['num_vars']):
         objective.SetCoefficient(x[j], data['obj_coeffs'][j])
-    objective.SetMinimization()
+    objective.SetMaximization()
     # In Python, you can also set the objective as follows.
     # obj_expr = [data['obj_coeffs'][j] * x[j] for j in range(data['num_vars'])]
     # solver.Maximize(solver.Sum(obj_expr))

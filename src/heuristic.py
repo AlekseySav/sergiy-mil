@@ -28,10 +28,7 @@ def gt_min(problems: list[Tableau], axis: list[bool]) -> Tableau | None:
         if not make_solution_feasible(p):
             # infeasible
             continue
-        if not make_solution_optimal(p):
-            # infeasible
-            continue
-    values = [p.solution()[1] for p in problems]
+    values = [p.solution()[0] for p in problems]
     return problems[argmin(values)]
 
 
@@ -42,10 +39,7 @@ def gt_max(problems: list[Tableau], axis: list[bool]) -> Tableau | None:
         if not make_solution_feasible(p):
             # infeasible
             continue
-        if not make_solution_optimal(p):
-            # infeasible
-            continue
-    values = [p.solution()[1] for p in problems]
+    values = [p.solution()[0] for p in problems]
     return problems[argmax(values)]
 
 
@@ -58,5 +52,5 @@ def gt_fifo(problems: list[Tableau], axis: list[bool]) -> Tableau | None:
 def gt_max_solution(problems: list[Tableau], axis: list[bool]) -> Tableau | None:
     if not problems:
         return None
-    z = [p.solution()[1] if make_solution_optimal(p) else float('-inf') for p in problems]
+    z = [p.solution()[0] if make_solution_optimal(p) else float('-inf') for p in problems]
     return problems[argmax(array(z))]
