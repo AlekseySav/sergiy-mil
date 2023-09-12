@@ -29,20 +29,31 @@ def array(data=()) -> np.ndarray:
 
 @dataclass
 class Tableau:
+    '''
+    TODO:
+        - remove __init__
+        - remove from_matrix
+        - remove print()
+        - add nice formatting
+    '''
+
     matrix: np.ndarray
     basis: list[int]
     func: np.ndarray
+    variables_constraints: dict[int:list[float]]
 
     def __init__(self, func) -> None:
         self.basis = []
         self.func = func
         self.matrix = np.empty(shape=(0, func.size + 1), dtype=np.float64)
+        self.variables_constraints = {}
 
     @classmethod
     def from_matrix(cls, matrix, basis, func):
         t = cls(func)
         t.basis = basis
         t.matrix = matrix
+        t.variables_constraints = {}
         return t
 
     @property
@@ -56,9 +67,11 @@ class Tableau:
         return res
 
     # NOTE: cons must not contain basic variables
-    def add_constraint(self, cons: np.ndarray) -> None:
+    def add_constraint(self, cons: np.ndarray, leq: bool = True) -> None:
         self.matrix = np.append(self.matrix, values=np.reshape(cons, (1, cons.size)), axis=0)
         self.matrix = np.insert(self.matrix, -1, values=0, axis=1)
+        if not leq:
+            self.matrix[-1] = -self.matrix[-1]
         self.matrix[-1, -2] = 1
         self.basis.append(self.variables_count)
         self.func = np.append(self.func, 0)
@@ -80,3 +93,11 @@ class Tableau:
         print(f'{self.basis=}')
         print(f'{self.matrix}')
         print(f'{self.solution()=}')
+
+    def remember_constraint(self, index: int, new_constraint: float, higher: bool):
+        if index not in self.variables_constraints.keys():
+            self.variables_constraints[index] = [0.0, float('+inf')]
+        if higher:
+            self.variables_constraints[index][higher] = min(self.variables_constraints[index][higher], new_constraint)
+        else:
+            self.variables_constraints[index][higher] = max(self.variables_constraints[index][higher], new_constraint)
