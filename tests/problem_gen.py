@@ -10,7 +10,7 @@ class ProblemGenerator:
     cons: int
 
     def __init__(self, modes: dict[str:str],
-                 values: dict[str: float | list[float]],
+                 values: dict[str:list[float]],
                  variables_count: int,
                  constraints_count: int):
         self.vars = variables_count
@@ -19,9 +19,9 @@ class ProblemGenerator:
         for key in modes.keys():
             if key not in values.keys():
                 self.generators[key] = ValueGenerator(mode=modes[key])
-            if isinstance(values[key], float):
-                self.generators[key] = ValueGenerator(mode=modes[key], E=values[key])
-            if isinstance(values[key], list):
+            if len(values[key]) == 1:
+                self.generators[key] = ValueGenerator(mode=modes[key], E=values[key][0])
+            if len(values[key]) == 2:
                 self.generators[key] = ValueGenerator(mode=modes[key], E=values[key][0], D=values[key][1])
 
     def value(self) -> Problem:

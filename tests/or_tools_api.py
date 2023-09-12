@@ -2,6 +2,7 @@ from ortools.linear_solver import pywraplp
 from src.problem import Problem
 
 
+# sample code from Google or-tools tutorial
 def solve_or_tools(p: Problem) -> float | None:
     data = p.to_dict()
     # Create the mip solver with the SCIP backend.
