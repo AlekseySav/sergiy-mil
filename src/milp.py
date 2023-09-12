@@ -3,63 +3,31 @@ from copy import deepcopy
 
 import numpy as np
 
-from src.tableau import Tableau, array
-from src.lp import solve_lp, make_solution_feasible
+import lp
+from src.lp import Tableau, NDArray, Float, array, make_solution_optimal, make_solution_feasible
 from src.heuristic import func_get_tableau, func_get_axis
 
-eps = 1/1000000000
+eps = 1 / 1000000000
 
 
 def _is_int(x, delta=eps):
     return abs(x - round(x)) <= delta
 
 
-def _subdivision(problem: Tableau, var_index: int, less: bool) -> Tableau:
-    row_index = problem.basis.index(var_index)
-    value = math.floor(problem.matrix[row_index, -1])
+def split_subdivision(problem: Tableau, var_index: int) -> list[Tableau]:
+    value = problem.solution()[1][var_index]
 
     new_problem = deepcopy(problem)
-    if value == 0 and less:
-        value += eps
-    constraint = np.zeros(problem.variables_count + 1, dtype=np.float64)
-    constraint[var_index] = 1 if less else -1
-    constraint[-1] = value if less else -value - 1
-    constraint = constraint - problem.matrix[row_index] if less else constraint + problem.matrix[row_index]
 
-    new_problem.remember_constraint(var_index, value + 1 if not less else value, less)
-    new_problem.add_constraint(constraint)
-    return new_problem
+    new_problem.add_restriction(var_index, np.round(value), lp.ConstraintSign.LEQ)
+    problem.add_restriction(var_index, np.round(value)+1, lp.ConstraintSign.GEQ)
+
+    return [new_problem, problem]
 
 
-def _split_subdivision(problem: Tableau, var_index: int) -> list[Tableau]:
-    return [_subdivision(problem, var_index, True),
-            _subdivision(problem, var_index, False)]
-
-
-def _get_solution(problem: Tableau, constraints: list[bool]) -> list[float]:
-    # first n columns in Tableau's matrix correspond to initial variables
-    n = len(constraints)
-    solution = [0.0 for _ in range(n)]
-    for row, x in enumerate(problem.basis):
-        if x < n:
-            solution[x] = problem.matrix[row, -1]
-    return solution
-
-
-def _check_solution(problem: Tableau, constraints: list[bool]) -> list[bool]:
-    solution = _get_solution(problem, constraints)
+def check_solution(values: NDArray, constraints: list[bool]) -> list[bool]:
     return [not constraint or _is_int(value)
-            for constraint, value in zip(constraints, solution)]
-
-
-def _solution(problem: Tableau, constraints: list[bool]) -> float:
-    solution = _get_solution(problem, constraints)
-    in_constraints = _check_solution(problem, constraints)
-    if all(in_constraints):
-        for i, x in enumerate(solution):
-            if constraints[i]:
-                solution[i] = round(x)
-    return array(solution) @ problem.func[:len(constraints)]
+            for constraint, value in zip(constraints, values)]
 
 
 def solve_milp(problem: Tableau, constraints: list[bool],
@@ -81,10 +49,10 @@ def solve_milp(problem: Tableau, constraints: list[bool],
 
     """
     iteration = 0
-    if not solve_lp(problem):
+    if not make_solution_optimal(problem):
         return None
-    z_lower = problem.solution()
-    z_upper = 0
+    z_lower, _ = problem.solution()
+    z_upper = Float(0)
     subdivisions = [problem]
     while subdivisions:
         iteration += 1
@@ -93,22 +61,19 @@ def solve_milp(problem: Tableau, constraints: list[bool],
         if not make_solution_feasible(problem):
             # infeasible
             continue
-        if not solve_lp(problem):
-            # infeasible
-            continue
-        z = problem.solution()
+        z, values = problem.solution()
         # print(problem.variables_constraints)
         # print(z)
         # print(z_upper)
         z_lower = min(z_lower, z)
         if z >= z_upper:
             continue
-        in_constraints = _check_solution(problem, constraints)
+        in_constraints = check_solution(values, constraints)
         if all(in_constraints):
             print()
             print('iteration = ', iteration)
-            print('new best solution = ', _get_solution(problem, constraints))
-            z_upper = _solution(problem, constraints)
+            print('new best solution = ', values[:len(constraints)])
+            z_upper = z # TODO : Check
             print('solution value (floored small variables)= ', z_upper)
             if z_lower == z_upper:
                 break
@@ -119,6 +84,6 @@ def solve_milp(problem: Tableau, constraints: list[bool],
             if split_index is None:
                 continue
             # print('split, index = ', split_index)
-            subdivisions += _split_subdivision(problem, split_index)
+            subdivisions += split_subdivision(problem, split_index)
 
     return z_upper

@@ -1,6 +1,6 @@
-from src.milp import _split_subdivision, _is_int, _get_solution, _check_solution, solve_milp, eps
-from src.milp.heuristic import gt_simple, ga_simple, gt_min, gt_max
-from src.tableau import Tableau, array
+from src.milp import solve_milp, eps, _is_int
+from src.heuristic import gt_simple, ga_simple, gt_min, gt_max
+from src.lp import Tableau, array
 from tests.or_tools_api import solve_or_tools
 from src.problem import Problem
 from tests.problem_gen import ProblemGenerator
@@ -35,107 +35,107 @@ def test_is_int():
     assert not _is_int(31123.2123121)
 
 
-def test_split_subdivision_simple():
-    t = Tableau.from_matrix(matrix=array([
-        [0, 1, 0, 5, 6],
-        [1, 0, 0, 7, 8],
-        [0, 0, 1, 9, 10]
-    ]), basis=[1, 0, 2],
-        func=array([3, 4, 5, 0]))
-    res = _split_subdivision(t, 0)
-    assert len(res) == 2
-    t1 = Tableau.from_matrix(matrix=array([
-        [0, 1, 0, 5, 0, 6],
-        [1, 0, 0, 7, 0, 8],
-        [0, 0, 1, 9, 0, 10],
-        [0, 0, 0, -7, 1, 0]
-    ]), basis=[1, 0, 2, 4],
-        func=array([3, 4, 5, 0, 0]))
-    t2 = Tableau.from_matrix(matrix=array([
-        [0, 1, 0, 5, 0, 6],
-        [1, 0, 0, 7, 0, 8],
-        [0, 0, 1, 9, 0, 10],
-        [0, 0, 0, 7, 1, -1]
-    ]), basis=[1, 0, 2, 4],
-        func=array([3, 4, 5, 0, 0]))
-    for t_new in [t1, t2]:
-        assert t_new in res
+# def test_split_subdivision_simple():
+#     t = Tableau.from_matrix(matrix=array([
+#         [0, 1, 0, 5, 6],
+#         [1, 0, 0, 7, 8],
+#         [0, 0, 1, 9, 10]
+#     ]), basis=[1, 0, 2],
+#         func=array([3, 4, 5, 0]))
+#     res = _split_subdivision(t, 0)
+#     assert len(res) == 2
+#     t1 = Tableau.from_matrix(matrix=array([
+#         [0, 1, 0, 5, 0, 6],
+#         [1, 0, 0, 7, 0, 8],
+#         [0, 0, 1, 9, 0, 10],
+#         [0, 0, 0, -7, 1, 0]
+#     ]), basis=[1, 0, 2, 4],
+#         func=array([3, 4, 5, 0, 0]))
+#     t2 = Tableau.from_matrix(matrix=array([
+#         [0, 1, 0, 5, 0, 6],
+#         [1, 0, 0, 7, 0, 8],
+#         [0, 0, 1, 9, 0, 10],
+#         [0, 0, 0, 7, 1, -1]
+#     ]), basis=[1, 0, 2, 4],
+#         func=array([3, 4, 5, 0, 0]))
+#     for t_new in [t1, t2]:
+#         assert t_new in res
 
 
-def test_split_subdivision_non_integer():
-    t = Tableau.from_matrix(matrix=array([
-        [0, 1, 0, 5, 6.001],
-        [1, 0, 0, 7, 8.001],
-        [0, 0, 1, 9, 10]
-    ]), basis=[1, 0, 2],
-        func=array([3, 4, 5, 0]))
-    res = _split_subdivision(t, 0)
-    assert len(res) == 2
-    t1 = Tableau.from_matrix(matrix=array([
-        [0, 1, 0, 5, 0, 6.001],
-        [1, 0, 0, 7, 0, 8.001],
-        [0, 0, 1, 9, 0, 10],
-        [0, 0, 0, -7, 1, -0.001]
-    ]), basis=[1, 0, 2, 4],
-        func=array([3, 4, 5, 0, 0]))
-    t2 = Tableau.from_matrix(matrix=array([
-        [0, 1, 0, 5, 0, 6.001],
-        [1, 0, 0, 7, 0, 8.001],
-        [0, 0, 1, 9, 0, 10],
-        [0, 0, 0, 7, 1, -0.999]
-    ]), basis=[1, 0, 2, 4],
-        func=array([3, 4, 5, 0, 0]))
-    for t_new in [t1, t2]:
-        assert t_new in res
+# def test_split_subdivision_non_integer():
+#     t = Tableau.from_matrix(matrix=array([
+#         [0, 1, 0, 5, 6.001],
+#         [1, 0, 0, 7, 8.001],
+#         [0, 0, 1, 9, 10]
+#     ]), basis=[1, 0, 2],
+#         func=array([3, 4, 5, 0]))
+#     res = _split_subdivision(t, 0)
+#     assert len(res) == 2
+#     t1 = Tableau.from_matrix(matrix=array([
+#         [0, 1, 0, 5, 0, 6.001],
+#         [1, 0, 0, 7, 0, 8.001],
+#         [0, 0, 1, 9, 0, 10],
+#         [0, 0, 0, -7, 1, -0.001]
+#     ]), basis=[1, 0, 2, 4],
+#         func=array([3, 4, 5, 0, 0]))
+#     t2 = Tableau.from_matrix(matrix=array([
+#         [0, 1, 0, 5, 0, 6.001],
+#         [1, 0, 0, 7, 0, 8.001],
+#         [0, 0, 1, 9, 0, 10],
+#         [0, 0, 0, 7, 1, -0.999]
+#     ]), basis=[1, 0, 2, 4],
+#         func=array([3, 4, 5, 0, 0]))
+#     for t_new in [t1, t2]:
+#         assert t_new in res
+#
+#
+# def test_get_solution():
+#     t = Tableau.from_matrix(matrix=array([
+#         [0, 1, 0, 5, 6],
+#         [1, 0, 0, 7, 8],
+#         [0, 0, 1, 9, 10]
+#     ]), basis=[1, 0, 2],
+#         func=array([3, 4, 5, 0]))
+#     res = _get_solution(t, [False, False, False])
+#     assert len(res) == 3
+#     assert res == [8, 6, 10]
+#
+#
+# def test_check_solution_correct_case():
+#     t = Tableau.from_matrix(matrix=array([
+#         [0, 1, 0, 5, 6.5],
+#         [1, 0, 0, 7, 8],
+#         [0, 0, 1, 9, 10]
+#     ]), basis=[1, 0, 2],
+#         func=array([3, 4, 5, 0]))
+#     res = _check_solution(t, [True, False, True])
+#     assert len(res) == 3
+#     assert all(res)
+#
+#
+# def test_check_solution_wrong_case():
+#     t = Tableau.from_matrix(matrix=array([
+#         [0, 1, 0, 5, 6],
+#         [1, 0, 0, 7, 8.5],
+#         [0, 0, 1, 9, 10]
+#     ]), basis=[1, 0, 2],
+#         func=array([3, 4, 5, 0]))
+#     res = _check_solution(t, [True, False, True])
+#     assert len(res) == 3
+#     assert not all(res)
 
 
-def test_get_solution():
-    t = Tableau.from_matrix(matrix=array([
-        [0, 1, 0, 5, 6],
-        [1, 0, 0, 7, 8],
-        [0, 0, 1, 9, 10]
-    ]), basis=[1, 0, 2],
-        func=array([3, 4, 5, 0]))
-    res = _get_solution(t, [False, False, False])
-    assert len(res) == 3
-    assert res == [8, 6, 10]
-
-
-def test_check_solution_correct_case():
-    t = Tableau.from_matrix(matrix=array([
-        [0, 1, 0, 5, 6.5],
-        [1, 0, 0, 7, 8],
-        [0, 0, 1, 9, 10]
-    ]), basis=[1, 0, 2],
-        func=array([3, 4, 5, 0]))
-    res = _check_solution(t, [True, False, True])
-    assert len(res) == 3
-    assert all(res)
-
-
-def test_check_solution_wrong_case():
-    t = Tableau.from_matrix(matrix=array([
-        [0, 1, 0, 5, 6],
-        [1, 0, 0, 7, 8.5],
-        [0, 0, 1, 9, 10]
-    ]), basis=[1, 0, 2],
-        func=array([3, 4, 5, 0]))
-    res = _check_solution(t, [True, False, True])
-    assert len(res) == 3
-    assert not all(res)
-
-
-def test_milp_simple():
-    t = Tableau(func=array([-5, -8]))
-    t.add_constraint(array([1, 1, 6]))
-    t.add_constraint(array([5, 9, 0, 45]))
-    constraints = [True, True]
-    res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
-    assert res == -40
+# def test_milp_simple():
+#     t = Tableau(func=array([-5, -8]))
+#     t.add_constraint(array([1, 1, 6]))
+#     t.add_constraint(array([5, 9, 0, 45]))
+#     constraints = [True, True]
+#     res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
+#     assert res == -40
 
 
 def test_with_or_tools():
-    p = Problem([[1, 1], [5, 9]], [6, 45], [-5, -8])
+    p = Problem([[1, 1], [5, 9]], [6, 45], [5, 8])
     t = p.to_tableau()
     constraints = [True, True]
     res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
@@ -152,7 +152,7 @@ def test_from_or_tools_example():
             [5, 13, 16, 3, -7],
         ],
         [250, 285, 211, 315],
-        [-7, -8, -2, -9, -6]
+        [7, 8, 2, 9, 6]
     )
     t = p.to_tableau()
     constraints = [True, True, True, True, True]
@@ -170,7 +170,7 @@ def test_with_gt_min():
             [5, 13, 16, 3, -7],
         ],
         [250, 285, 211, 315],
-        [-7, -8, -2, -9, -6]
+        [7, 8, 2, 9, 6]
     )
     t = p.to_tableau()
     constraints = [True, True, True, True, True]

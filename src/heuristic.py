@@ -2,9 +2,7 @@ from collections.abc import Callable
 
 from numpy import argmax, argmin
 
-from src.lp import make_solution_feasible, solve_lp
-from src.tableau import Tableau
-
+from src.lp import array, make_solution_feasible, make_solution_optimal, Tableau
 
 func_get_tableau = Callable[[list[Tableau], list[bool]], Tableau | None]
 func_get_axis = Callable[[Tableau, list[bool]], int | None]
@@ -30,10 +28,10 @@ def gt_min(problems: list[Tableau], axis: list[bool]) -> Tableau | None:
         if not make_solution_feasible(p):
             # infeasible
             continue
-        if not solve_lp(p):
+        if not make_solution_optimal(p):
             # infeasible
             continue
-    values = [p.solution() for p in problems]
+    values = [p.solution()[1] for p in problems]
     return problems[argmin(values)]
 
 
@@ -44,8 +42,21 @@ def gt_max(problems: list[Tableau], axis: list[bool]) -> Tableau | None:
         if not make_solution_feasible(p):
             # infeasible
             continue
-        if not solve_lp(p):
+        if not make_solution_optimal(p):
             # infeasible
             continue
-    values = [p.solution() for p in problems]
+    values = [p.solution()[1] for p in problems]
     return problems[argmax(values)]
+
+
+def gt_fifo(problems: list[Tableau], axis: list[bool]) -> Tableau | None:
+    if problems:
+        return problems[-1]
+    return None
+
+
+def gt_max_solution(problems: list[Tableau], axis: list[bool]) -> Tableau | None:
+    if not problems:
+        return None
+    z = [p.solution()[1] if make_solution_optimal(p) else float('-inf') for p in problems]
+    return problems[argmax(array(z))]
