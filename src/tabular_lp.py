@@ -145,9 +145,9 @@ def run_primal_simplex(t: Tableau) -> bool:
 
 def run_dual_simplex(t: Tableau) -> bool:
     def find_leaving_variable(t: Tableau) -> int | None:
-        r = t._matrix[:, -1]
+        r = t._matrix[1:, -1]
         index = int(r.argmin())
-        return None if r[index] >= 0 else index
+        return None if r[index] >= 0 else index + 1
 
     def find_entering_variable(t: Tableau, v: int) -> int | None:
         row = t._matrix[v, :-1]
