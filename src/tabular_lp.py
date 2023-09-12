@@ -62,13 +62,13 @@ class Tableau:
 
     @classmethod
     def make(cls, lhs: NDArray, rhs: NDArray, objective: NDArray, basis: list):
-        objective = np.reshape(np.concatenate(([1], -objective, [0]), dtype=Float), (1, objective.shape[0] + 2))
         rhs = np.reshape(rhs, (rhs.shape[0], 1))
-        matrix = np.concatenate((np.zeros_like(rhs), lhs, rhs), axis=1)
-        return cls(np.concatenate((objective, matrix)), [0] + list(map(lambda x: x + 1, basis)))
+        matrix = np.concatenate((lhs, rhs), axis=1)
+        return cls.from_matrix(matrix, basis, objective)
 
     @classmethod
     def from_matrix(cls, matrix: NDArray, basis: list, func: NDArray):
+        func = np.hstack((func, np.zeros(matrix.shape[1] - 1 - func.shape[0], dtype=Float)))
         matrix = np.insert(matrix, 0, array([0]), axis=1)
         objective = np.concatenate(([-1], func, [0]), dtype=Float)
         matrix = np.concatenate((np.reshape(-objective, (1, objective.shape[0])), matrix), dtype=Float)
@@ -86,9 +86,21 @@ class Tableau:
         self._matrix = np.insert(self._matrix, -1, 0, axis=1)
         self._matrix = np.append(self._matrix, values=np.reshape(cons, (1, cons.size)), axis=0)
 
+    def add_restriction(self, index: int, value: Float, sign: ConstraintSign) -> None:
+        # add lower-bound & upper-bound restriction example
+        #   solution = t.solution()[1][index]
+        #   t1.add_restriction(index, np.round(solution), lp.ConstraintSign.LEQ)
+        #   t2.add_restriction(index, np.round(solution + 1), lp.ConstraintSign.GEQ)
+        z = np.zeros(self._matrix.shape[1] - 2, dtype=Float)
+        z[index] = 1
+        z -= self._matrix[index + 1, 1:-1]
+        self.add_constraint(z, value - self._matrix[index + 1, -1], sign)
+
     def solution(self) -> tuple[Float, NDArray]:
         r = np.zeros(self.variables_count + 1, dtype=Float)
         r[self._basis] = self._matrix[:, -1]
+        # r[0] = objective value
+        # r[1:] = variables' values
         return r[0], r[1:]
 
     def __eq__(self, other) -> bool:
@@ -110,7 +122,7 @@ def normalize(t: Tableau, col: int, row: int):
 
 def run_primal_simplex(t: Tableau) -> bool:
     def find_entering_variable(t: Tableau) -> int | None:
-        r = t._matrix[0, :]  # objective coefficients
+        r = t._matrix[0, :-1]  # objective coefficients
         index = int(r.argmin())
         return None if r[index] >= 0 else index
 
@@ -134,9 +146,9 @@ def run_primal_simplex(t: Tableau) -> bool:
 
 def run_dual_simplex(t: Tableau) -> bool:
     def find_leaving_variable(t: Tableau) -> int | None:
-        r = t._matrix[:, -1]
+        r = t._matrix[1:, -1]
         index = int(r.argmin())
-        return None if r[index] >= 0 else index
+        return None if r[index] >= 0 else index + 1
 
     def find_entering_variable(t: Tableau, v: int) -> int | None:
         row = t._matrix[v, :-1]
@@ -158,4 +170,6 @@ def run_dual_simplex(t: Tableau) -> bool:
 
 make_solution_optimal = run_primal_simplex
 make_solution_feasible = run_dual_simplex
+
+
 
