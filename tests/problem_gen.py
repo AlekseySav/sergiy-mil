@@ -1,7 +1,7 @@
 import math
 
-from src.problem import Problem
-from tests.value_gen import ValueGenerator
+from problem import Problem
+from value_gen import ValueGenerator
 
 
 class ProblemGenerator:

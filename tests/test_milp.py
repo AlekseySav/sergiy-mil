@@ -1,9 +1,9 @@
-from src.milp import solve_milp, eps, _is_int
-from src.heuristic import gt_simple, ga_simple, gt_min, gt_max
-from src.lp import Tableau, array
-from tests.or_tools_api import solve_or_tools
-from src.problem import Problem
-from tests.problem_gen import ProblemGenerator
+from milp import solve_milp, eps, _is_int
+from heuristic import gt_simple, ga_simple, gt_min, gt_max
+from lp import Tableau, array
+from or_tools_api import solve_or_tools
+from problem import Problem
+from problem_gen import ProblemGenerator
 
 '''
 Problem:

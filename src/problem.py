@@ -1,6 +1,6 @@
 from copy import copy
 
-from src.lp import Tableau, array
+from lp import Tableau, array
 
 
 class Problem:

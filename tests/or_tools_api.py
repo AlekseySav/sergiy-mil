@@ -1,5 +1,5 @@
 from ortools.linear_solver import pywraplp
-from src.problem import Problem
+from problem import Problem
 
 
 # sample code from Google or-tools tutorial
