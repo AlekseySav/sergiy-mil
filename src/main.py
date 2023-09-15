@@ -1,6 +1,6 @@
-from src.heuristic import gt_min, ga_simple
-from src.milp import solve_milp
-from src.problem import Problem
+from heuristic import gt_min, ga_simple
+from milp import solve_milp
+from problem import Problem
 
 
 def solve():

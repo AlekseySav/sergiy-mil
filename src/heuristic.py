@@ -2,7 +2,7 @@ from collections.abc import Callable
 
 from numpy import argmax, argmin
 
-from src.lp import array, make_solution_feasible, make_solution_optimal, Tableau
+from lp import array, make_solution_feasible, make_solution_optimal, Tableau
 
 func_get_tableau = Callable[[list[Tableau], list[bool]], Tableau | None]
 func_get_axis = Callable[[Tableau, list[bool]], int | None]

@@ -4,8 +4,8 @@ from copy import deepcopy
 import numpy as np
 
 import lp
-from src.lp import Tableau, NDArray, Float, array, make_solution_optimal, make_solution_feasible
-from src.heuristic import func_get_tableau, func_get_axis
+from lp import Tableau, NDArray, Float, array, make_solution_optimal, make_solution_feasible
+from heuristic import func_get_tableau, func_get_axis
 
 eps = 1 / 1000000000
 
