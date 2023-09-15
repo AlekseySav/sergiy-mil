@@ -3,8 +3,9 @@ from problem import Problem
 
 
 # sample code from Google or-tools tutorial
-def solve_or_tools(p: Problem) -> float | None:
+def solve_or_tools(p: Problem) -> tuple[float | None, str]:
     data = p.to_dict()
+    output = "\nOR-TOOLS output:\n"
     # Create the mip solver with the SCIP backend.
     solver = pywraplp.Solver.CreateSolver('SCIP')
     if not solver:
@@ -14,13 +15,13 @@ def solve_or_tools(p: Problem) -> float | None:
     x = {}
     for j in range(data['num_vars']):
         x[j] = solver.IntVar(0, infinity, 'x[%i]' % j)
-    print('Number of variables =', solver.NumVariables())
+    output += f'Number of variables = {solver.NumVariables()}\n'
 
     for i in range(data['num_constraints']):
         constraint = solver.RowConstraint(-infinity, data['bounds'][i], '')
         for j in range(data['num_vars']):
             constraint.SetCoefficient(x[j], data['constraint_coeffs'][i][j])
-    print('Number of constraints =', solver.NumConstraints())
+    output += f'Number of constraints = {solver.NumConstraints()}\n'
     # In Python, you can also set the constraints as follows.
     # for i in range(data['num_constraints']):
     #  constraint_expr = \
@@ -35,16 +36,16 @@ def solve_or_tools(p: Problem) -> float | None:
     # obj_expr = [data['obj_coeffs'][j] * x[j] for j in range(data['num_vars'])]
     # solver.Maximize(solver.Sum(obj_expr))
 
+    output += '\n'
     status = solver.Solve()
-
     if status == pywraplp.Solver.OPTIMAL:
         for j in range(data['num_vars']):
-            print(x[j].name(), ' = ', x[j].solution_value())
-        print()
-        print('Problem solved in %f milliseconds' % solver.wall_time())
-        print('Problem solved in %d iterations' % solver.iterations())
-        print('Problem solved in %d branch-and-bound nodes' % solver.nodes())
-        return solver.Objective().Value()
+            output += f"{x[j].name()} = {x[j].solution_value()}\n"
+        output += f'solution value = {solver.Objective().Value()}\n\n'
+        output += f'Problem solved in {solver.wall_time()} milliseconds\n'
+        output += f'Problem solved in {solver.iterations()} iterations\n'
+        output += f'Problem solved in {solver.nodes()} branch-and-bound nodes\n'
+        return solver.Objective().Value(), output
     else:
-        print('The problem does not have an optimal solution.')
-        return None
+        output += 'The problem does not have an optimal solution.'
+        return None, output
