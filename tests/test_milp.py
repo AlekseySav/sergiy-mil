@@ -25,6 +25,7 @@ Result after setup:
     count=4
 '''
 
+
 def test_milp_simple():
     p = Problem(
         [
@@ -37,8 +38,33 @@ def test_milp_simple():
     t = p.to_tableau()
     constraints = [True, True]
     res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
-    or_tools_res = solve_or_tools(p)
-    assert res == or_tools_res
+    or_tools_res, or_tools_output = solve_or_tools(p)
+    assert res == or_tools_res, print(or_tools_output)
+
+
+def test_milp_simple():
+    p = Problem(
+        [[5, -10], [4, 6]],
+        [157, 33],
+        [6, 9]
+    )
+    t = p.to_tableau()
+    constraints = [True, True]
+    res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
+    or_tools_res, or_tools_output = solve_or_tools(p)
+    assert res == or_tools_res, print(or_tools_output)
+
+def test_milp_simple():
+    p = Problem(
+        [[5, -10], [4, 6], [0, 1]],
+        [157, 33, 5],
+        [6, 9]
+    )
+    t = p.to_tableau()
+    constraints = [True, True]
+    res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
+    or_tools_res, or_tools_output = solve_or_tools(p)
+    assert res == or_tools_res, print(or_tools_output)
 
 
 def test_with_or_tools():
@@ -46,8 +72,8 @@ def test_with_or_tools():
     t = p.to_tableau()
     constraints = [True, True]
     res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
-    or_tools_res = solve_or_tools(p)
-    assert res == or_tools_res
+    or_tools_res, or_tools_output = solve_or_tools(p)
+    assert res == or_tools_res, print(or_tools_output)
 
 
 def test_from_or_tools_example():
@@ -64,7 +90,7 @@ def test_from_or_tools_example():
     t = p.to_tableau()
     constraints = [True, True, True, True, True]
     my_res = solve_milp(t, constraints=constraints, get_tableau=gt_simple, get_axis=ga_simple)
-    or_tools_res = solve_or_tools(p)
+    or_tools_res, or_tools_output = solve_or_tools(p)
     assert abs(my_res - or_tools_res) < eps
 
 
@@ -82,7 +108,7 @@ def test_with_gt_min():
     t = p.to_tableau()
     constraints = [True, True, True, True, True]
     my_res = solve_milp(t, constraints=constraints, get_tableau=gt_min, get_axis=ga_simple)
-    or_tools_res = solve_or_tools(p)
+    or_tools_res, or_tools_output = solve_or_tools(p)
     assert abs(my_res - or_tools_res) < eps
 
 
@@ -100,7 +126,7 @@ def test_with_gt_max():
     t = p.to_tableau()
     constraints = [True, True, True, True, True]
     my_res = solve_milp(t, constraints=constraints, get_tableau=gt_max, get_axis=ga_simple)
-    or_tools_res = solve_or_tools(p)
+    or_tools_res, or_tools_output = solve_or_tools(p)
     assert abs(my_res - or_tools_res) < eps
 
 
@@ -112,22 +138,21 @@ def test_small_random():
             'obj_coeffs': 'uniform'
         },
         {
-            'constraints_coeffs': [-5, 10],
-            'bounds': [0, 50],
-            'obj_coeffs': [-10, 0]
+            'constraints_coeffs': [-10, 10],
+            'bounds': [0, 200],
+            'obj_coeffs': [-10, 10]
         },
         2,
         2
     )
     p = gen.value()
     t = p.to_tableau()
-    print(p.constraint_coeffs, p.bounds, p.obj_coeffs)
+
     cons = [True for _ in range(2)]
     my_res = solve_milp(t, cons, gt_min, ga_simple)
-    or_tools_res = solve_or_tools(p)
-    print(my_res, or_tools_res)
+    or_tools_res, or_tools_output = solve_or_tools(p)
     if any([my_res is not None, or_tools_res is not None]):
-        assert abs(my_res - or_tools_res) < eps
+        assert abs(my_res - or_tools_res) < eps, print(p.constraint_coeffs, p.bounds, p.obj_coeffs)
 
 
 def test_mid_random():
@@ -138,19 +163,29 @@ def test_mid_random():
             'obj_coeffs': 'uniform'
         },
         {
-            'constraints_coeffs': [-5, 10],
-            'bounds': [0, 50],
-            'obj_coeffs': [-10, 0]
+            'constraints_coeffs': [-10, 10],
+            'bounds': [0, 200],
+            'obj_coeffs': [-10, 10]
         },
         10,
         10
     )
     p = gen.value()
     t = p.to_tableau()
-    print(p.constraint_coeffs, p.bounds, p.obj_coeffs)
     cons = [True for _ in range(10)]
-    my_res = solve_milp(t, cons, gt_min, ga_simple)
-    or_tools_res = solve_or_tools(p)
-    print(my_res, or_tools_res)
+    my_res = solve_milp(t, cons, gt_max, ga_simple)
+    or_tools_res, or_tools_output = solve_or_tools(p)
     if any([my_res is not None, or_tools_res is not None]):
-        assert abs(my_res - or_tools_res) < eps
+        assert abs(my_res - or_tools_res) < eps, print(p.constraint_coeffs, p.bounds, p.obj_coeffs)
+
+
+def test_many_small_random():
+    for i in range(100):
+        print(i)
+        test_small_random()
+
+
+def test_many_mid_random():
+    for i in range(100):
+        print(i)
+        test_mid_random()
