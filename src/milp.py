@@ -19,8 +19,8 @@ def split_subdivision(problem: Tableau, var_index: int) -> list[Tableau]:
 
     new_problem = deepcopy(problem)
 
-    new_problem.add_restriction(var_index, np.round(value), lp.ConstraintSign.LEQ)
-    problem.add_restriction(var_index, np.round(value)+1, lp.ConstraintSign.GEQ)
+    new_problem.add_restriction(var_index, np.floor(value), lp.ConstraintSign.LEQ)
+    problem.add_restriction(var_index, np.floor(value)+1, lp.ConstraintSign.GEQ)
 
     return [new_problem, problem]
 
