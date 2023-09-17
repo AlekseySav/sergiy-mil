@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "src"
+version = "0.0.1"
+description = "MILP solver"
+authors = [
+  "Sergiy Yarygin <sergiyar55@gmail.com>",
+  "Alexey Savinov <schet.v.komplax@gmail.com>"
+]
+[tool.poetry.include]
+include = "src"
+
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "src"
+]
+
+[tool.pyright]
+include = "src"
+
