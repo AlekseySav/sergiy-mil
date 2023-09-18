@@ -1,1 +1,2 @@
-/qodana.yaml
+__pycache__
+*.pyc
