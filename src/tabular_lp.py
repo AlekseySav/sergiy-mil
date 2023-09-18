@@ -156,7 +156,7 @@ def run_dual_simplex(t: Tableau) -> bool:
         row = t._matrix[v, :-1]
         obj = t._matrix[0, :-1]
         # r = np.divide(obj, row, where=row * obj > 0, out=np.full_like(row, np.inf))
-        r = np.divide(obj, row, where=(row != 0) & (obj * row >= 0), out=np.full_like(row, np.inf))
+        r = np.divide(obj, row, where=(row < 0) & (obj <= 0), out=np.full_like(row, np.inf))
         index = int(r.argmin())
         return None if r[index] == np.inf else index
         #
