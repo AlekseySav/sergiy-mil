@@ -112,6 +112,9 @@ class Tableau:
                 self._matrix.shape == other._matrix.shape and
                 np.allclose(self._matrix, other._matrix))
 
+    def make_basis_non_degenerate(self) -> None:
+        a = self._matrix[0, self._basis]
+        a[a == 0] = 1e-20
 
 
 def normalize(t: Tableau, col: int, row: int):
