@@ -95,7 +95,6 @@ class Tableau:
         z = np.zeros(self._matrix.shape[1] - 2, dtype=Float)
         z[index] = 1
         z -= self._matrix[line, 1:-1]
-        print(z, line, index, self._basis)
         self.add_constraint(z, value - self._matrix[line, -1], sign)
 
     def solution(self) -> tuple[Float, NDArray]:
