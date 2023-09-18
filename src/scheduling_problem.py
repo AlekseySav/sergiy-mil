@@ -87,7 +87,7 @@ class STN:
                 else:
                     tasks_to_units[t].append(u)
 
-        graph = pydot.Dot("STN-graph", graph_type="digraph", bgcolor="white")
+        graph = pydot.Dot("STN-graph", graph_type="digraph", bgcolor="white", rankdir="TB", concentrate="true")
         subgraphs = {}
         for t in self.tasks:
             sg_name = "cluster_Units: "
@@ -109,7 +109,8 @@ class STN:
                                       color=("red" if s.ns else "black")))
         for a in self.arcs:
             graph.add_edge(pydot.Edge(a.from_to[0].name, a.from_to[1].name,
-                                      label=f"{a.fraction[0]}/{a.fraction[1]}", decorate="true"))
+                                      label=(f"{a.fraction[0]}/{a.fraction[1]}" if a.fraction[0] != a.fraction[1]
+                                             else f"{a.fraction[0] if a.fraction[0] != 1 else ''}")))
         return graph.write(filename)
 
 
@@ -121,40 +122,98 @@ def test():
     stn = STN(states, tasks, arcs, units)
     stn.draw('0.dot')
 
-    states = [
-        State(name="State 1"),
-        State(name="State 2"),
-        State(name="State 3"),
-        State(name="State 4", max_stock=100),
-        State(name="State 5", max_stock=200),
-        State(name="State 6", ns=True),
-        State(name="State 7", max_stock=150),
-        State(name="State 8", ns=True),
-        State(name="State 9"),
-        State(name="State 10"),
-    ]
-    tasks = [
-        Task(name="Task 1/1", batch_processing_time=1, max_batch_size=100),
-        Task(name="Task 2", batch_processing_time=2, max_batch_size=50),
-        Task(name="Task 2", batch_processing_time=2, max_batch_size=90),
-        Task(name="Task 3", batch_processing_time=2, max_batch_size=50),
-        Task(name="Task 3", batch_processing_time=2, max_batch_size=90),
-        Task(name="Task 4", batch_processing_time=1, max_batch_size=50),
-        Task(name="Task 4", batch_processing_time=1, max_batch_size=90),
-        Task(name="Task 5", batch_processing_time=1, max_batch_size=200),
-        Task(name="Task 6", batch_processing_time=2, max_batch_size=200),
-    ]
-    units = [
-        Unit(name="Unit 1", tasks=[tasks[0]]),
-        Unit(name="Unit 2", tasks=[tasks[1], tasks[3], tasks[5]]),
-        Unit(name="Unit 3", tasks=[tasks[2], tasks[4], tasks[6]]),
-        Unit(name="Unit 4", tasks=[tasks[7], tasks[8]]),
-    ]
-    arcs = [
-        Arc([states[0], tasks[0]]),
-        Arc([tasks[0], states[3]]),
-        Arc([states[3], tasks[2]], fraction=[0.4, 0.4]),
-        Arc([states[3], tasks[3]], fraction=[0.4, 0.4]),
-    ]
+    def make_state(x) -> State:
+        if len(x) == 1:
+            return State(name=x[0])
+        if len(x) == 2:
+            return State(name=x[0], max_stock=x[1])
+        if len(x) == 3:
+            return State(name=x[0], min_stock=x[1], max_stock=x[2])
+        return State(x[0], x[1], x[2], x[3], x[4])
+
+    def make_task(x) -> Task:
+        match len(x):
+            case 1:
+                return Task(name=x[0])
+            case 2:
+                return Task(name=x[0], batch_processing_time=x[1])
+            case 3:
+                return Task(name=x[0], batch_processing_time=x[1], max_batch_size=x[2])
+            case 4:
+                return Task(x[0], x[1], x[2], x[3])
+
+    def make_unit(x, tasks) -> Unit:
+        return Unit(x[0], [tasks[i] for i in x[1]])
+
+    def make_arc(x) -> Arc:
+        match len(x):
+            case 2:
+                return Arc([x[0], x[1]])
+            case 3:
+                return Arc([x[0], x[1]], [x[2], x[2]])
+            case 4:
+                return Arc([x[0], x[1]], [x[2], x[3]])
+
+    states = list(map(lambda x: make_state(x),
+                      [
+                          ["State 1"],
+                          ["State 2"],
+                          ["State 3"],
+                          ["State 4", 100],
+                          ["State 5", 200],
+                          ["State 6", 0, 0, float('+inf'), True],
+                          ["State 7", 150],
+                          ["State 8", 0, 0, float('+inf'), True],
+                          ["State 9"],
+                          ["State 10"],
+                      ]))
+    tasks = list(map(lambda x: make_task(x),
+                     [
+                         ["Task 1/1", 1, 100],
+                         ["Task 2/2", 2, 50],
+                         ["Task 2/3", 2, 90],
+                         ["Task 3/2", 2, 50],
+                         ["Task 3/3", 2, 90],
+                         ["Task 4/2", 1, 50],
+                         ["Task 4/3", 1, 90],
+                         ["Task 5/4", 1, 200],
+                         ["Task 6/4", 2, 200],
+                     ]))
+    units = list(map(lambda x: make_unit(x, tasks),
+                     [
+                         ["Unit 1", [0]],
+                         ["Unit 2", [1, 3, 5]],
+                         ["Unit 3", [2, 4, 6]],
+                         ["Unit 4", [7, 8]]
+                     ]))
+    arcs = list(map(lambda x: make_arc(x),
+                    [
+                        [states[0], tasks[0]],
+                        [tasks[0], states[3]],
+                        [states[3], tasks[1], 0.4],
+                        [states[3], tasks[2], 0.4],
+                        [states[1], tasks[3], 0.5],
+                        [states[1], tasks[4], 0.5],
+                        [states[2], tasks[3], 0.5],
+                        [states[2], tasks[4], 0.5],
+                        [states[2], tasks[5], 0.2],
+                        [states[2], tasks[6], 0.2],
+                        [tasks[1], states[8], 0.4],
+                        [tasks[2], states[8], 0.4],
+                        [tasks[1], states[6], 0.6],
+                        [tasks[2], states[6], 0.6],
+                        [tasks[3], states[4]],
+                        [tasks[4], states[4]],
+                        [tasks[5], states[5]],
+                        [tasks[6], states[5]],
+                        [states[6], tasks[5], 0.8],
+                        [states[6], tasks[6], 0.8],
+                        [states[4], tasks[1], 0.6],
+                        [states[4], tasks[2], 0.6],
+                        [states[5], tasks[7]],
+                        [tasks[7], states[7], 0.1],
+                        [states[7], tasks[8]],
+                        [tasks[7], states[9], 0.9]
+                    ]))
     stn = STN(states, tasks, arcs, units)
     stn.draw('1.dot')
