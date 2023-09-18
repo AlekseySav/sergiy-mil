@@ -95,6 +95,7 @@ class Tableau:
         z = np.zeros(self._matrix.shape[1] - 2, dtype=Float)
         z[index] = 1
         z -= self._matrix[line, 1:-1]
+        print(z, line, index, self._basis)
         self.add_constraint(z, value - self._matrix[line, -1], sign)
 
     def solution(self) -> tuple[Float, NDArray]:
@@ -154,9 +155,17 @@ def run_dual_simplex(t: Tableau) -> bool:
     def find_entering_variable(t: Tableau, v: int) -> int | None:
         row = t._matrix[v, :-1]
         obj = t._matrix[0, :-1]
-        r = np.divide(obj, row, where=(obj != 0) & (row < 0), out=np.full_like(row, np.inf))
+        # r = np.divide(obj, row, where=row * obj > 0, out=np.full_like(row, np.inf))
+        r = np.divide(obj, row, where=(row != 0) & (obj * row >= 0), out=np.full_like(row, np.inf))
         index = int(r.argmin())
         return None if r[index] == np.inf else index
+        #
+        # div = np.divide(obj, row, where=row * obj > 0, out=np.full_like(row, np.inf))
+        # if (min := div.min()) == np.inf:
+        #     return None  # unbounded/infeasible
+        # r = np.array(t._basis, dtype=Float)
+        # r[np.where(div != min)] = np.inf
+        # return int(r.argmin())
 
     # max{f} -> min{-f}
     t._matrix[0, 1:] = -t._matrix[0, 1:]
@@ -172,30 +181,20 @@ def run_dual_simplex(t: Tableau) -> bool:
 make_solution_optimal = run_primal_simplex
 make_solution_feasible = run_dual_simplex
 #
-# t = Tableau(_matrix=array([[ 1.00000000e+00,  0.00000000e+00,  0.00000000e+00,
-#          4.37652812e-01,  1.46699267e-01,  0.00000000e+00,
-#          0.00000000e+00,  1.66259169e-01,  9.07090465e-01,
-#          7.57946210e-02,  2.62655257e+02],
-#        [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
-#          3.97921760e+00, -2.95110024e+00,  0.00000000e+00,
-#          1.00000000e+00, -1.11246944e-01, -3.64303178e-01,
-#         -3.08068460e-01,  4.43850856e+01],
-#        [ 0.00000000e+00,  1.00000000e+00,  0.00000000e+00,
-#         -3.38630807e-01, -8.55745721e-02,  0.00000000e+00,
-#          0.00000000e+00,  6.96821516e-02, -1.12469438e-01,
-#          3.91198044e-02,  8.45110024e+00],
-#        [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
-#         -5.89853301e-01,  7.40831296e-01,  1.00000000e+00,
-#          0.00000000e+00, -1.03911980e-02,  1.30806846e-01,
-#         -6.72371638e-02,  3.45904645e+00],
-#        [ 0.00000000e+00,  0.00000000e+00,  1.00000000e+00,
-#          1.04339853e+00,  6.62591687e-01,  0.00000000e+00,
-#          0.00000000e+00, -3.23960880e-02,  1.13691932e-01,
-#          2.56723716e-02,  2.28429095e+01]]), _basis=[0, 6, 1, 5, 2])
+# t = Tableau(array([
+#     [1, -6, -9, 0, 0, 0],
+#     [0, 5, -10, 1, 0, 157],
+#     [0, 4,   6, 0, 1, 33]
+# ]), [0, 3, 4])
 #
-# np.set_printoptions(precision=2, suppress=True, linewidth=120)
-# t.add_restriction(0, Float(44), ConstraintSign.LEQ)
-# print(t._matrix)
+# np.set_printoptions(suppress=True, linewidth=100)
+# print(t._matrix, t._basis)
+# run_primal_simplex(t)
+# print(t._matrix, t._basis)
+# t.add_restriction(1, Float(5), ConstraintSign.LEQ)
+# print(t._matrix, t._basis)
 # run_dual_simplex(t)
-# print(t._matrix)
+# print(t._matrix, t._basis)
+# run_primal_simplex(t)
+# print(t._matrix, t._basis)
 #
