@@ -15,5 +15,12 @@ pythonpath = [
 ]
 
 [tool.pyright]
-include = "src"
+include = [
+	"src",
+	"tests"
+]
+executionEnvironments = [
+  { root = "tests", extraPaths = ["src" ]},
+  { root = "src" }
+]
 
