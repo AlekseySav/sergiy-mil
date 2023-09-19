@@ -14,7 +14,10 @@ def solve_or_tools(p: Problem) -> tuple[float | None, str]:
     infinity = solver.infinity()
     x = {}
     for j in range(data['num_vars']):
-        x[j] = solver.IntVar(0, infinity, 'x[%i]' % j)
+        if p.type_constraints[j]:
+            x[j] = solver.IntVar(0, infinity, f'x[{j}]')
+        else:
+            x[j] = solver.NumVar(0, infinity, f'x[{j}]')
     output += f'Number of variables = {solver.NumVariables()}\n'
 
     for i in range(data['num_constraints']):

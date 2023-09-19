@@ -9,13 +9,18 @@ class Problem:
     obj_coeffs: list[float]
     num_vars: int
     num_constraints: int
+    type_constraints: list[bool]
 
-    def __init__(self, constraint_coeffs: list[list[float]], bounds: list[float], obj_coeffs: list[float]):
+    def __init__(self, constraint_coeffs: list[list[float]], bounds: list[float], obj_coeffs: list[float], type_constaints: list[bool] | None = None):
         self.constraint_coeffs = constraint_coeffs
         self.bounds = bounds
         self.obj_coeffs = obj_coeffs
         self.num_vars = len(constraint_coeffs[0])
         self.num_constraints = len(bounds)
+        if type_constaints is None:
+            self.type_constraints = [False for _ in range(self.num_vars)]
+        else:
+            self.type_constraints = type_constaints
 
     def to_dict(self) -> dict:
         data = {'constraint_coeffs': self.constraint_coeffs, 'bounds': self.bounds, 'obj_coeffs': self.obj_coeffs,

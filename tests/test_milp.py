@@ -34,9 +34,10 @@ def comp(res1, res2) -> bool:
 
 
 def comp_with_or_tools(p: Problem, gt=gt_simple, ga=ga_simple):
-    t = p.to_tableau()
     constraints = [True for _ in range(p.num_vars)]
+    p.type_constraints = constraints
 
+    t = p.to_tableau()
     milp_res, milp_output = solve_milp(t, constraints, gt, ga)
     or_tools_res, or_tools_output = solve_or_tools(p)
 
