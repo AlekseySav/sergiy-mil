@@ -174,6 +174,29 @@ def test_dual_basic():
     assert is_optimal_feasible(t)
     assert t._basis == [0, 3, 4, 2, 1]
 
+def test_milp_iteration():
+    np.set_printoptions(suppress=True, linewidth=120)
+    t = lp.Tableau(_matrix=lp.array([[  1.        ,   0.        ,   0.        ,  -0.        ,
+          0.88888889,  -0.        ,   1.66666667,   0.        ,
+        207.88888889],
+       [  0.        ,   0.        ,   1.        ,   0.        ,
+         -0.11111111,   0.        ,   0.66666667,   0.        ,
+         16.88888889],
+       [  0.        ,   1.        ,   0.        ,   0.        ,
+          0.        ,   0.        ,   1.        ,   0.        ,
+         49.        ],
+       [ -0.        ,  -0.        ,  -0.        ,   1.        ,
+          1.        ,   0.        ,  -3.        ,   0.        ,
+          3.        ],
+       [ -0.        ,  -0.        ,  -0.        ,  -0.        ,
+          0.11111111,   1.        ,  -0.66666667,   0.        ,
+          0.11111111],
+       [  0.        ,  -0.        ,  -0.        ,  -0.        ,
+         -0.11111111,  -0.        ,   0.66666667,   1.        ,
+         -0.11111111]]), _basis=[0, 2, 1, 3, 5, 7])
+    print(t)
+    lp.run_dual_simplex(t)
+    print(t)
 
 #
 # stress optimality/feasibility
