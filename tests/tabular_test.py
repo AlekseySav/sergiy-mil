@@ -1,6 +1,9 @@
+from or_tools_api import solve_or_tools
 import tabular_lp as lp
 import numpy as np
 import random
+from problem_gen import Problem, ProblemGenerator
+from test_milp import comp
 
 
 '''
@@ -67,6 +70,23 @@ def is_optimal_feasible(t: lp.Tableau):
 
 
 def test_primal_basic():
+    t = lp.Tableau(lp.array([
+        [1, -8, -7, 0, 0, 0],
+        [0, -3, -5, 1, 0, 0],
+        [0,  9,  4, 0, 1, 133]
+    ]), [0, 3, 4])
+    assert not is_optimal_feasible(t)
+    lp.run_primal_simplex(t)
+
+    t = lp.Tableau(lp.array([
+        [1, -8, -5, 0, 0, 0],
+        [0,  5,  4, 1, 0, 97],
+        [0,  2,  8, 0, 1, 0],
+    ]), [0, 3, 4])
+    assert not is_optimal_feasible(t)
+    lp.run_primal_simplex(t)
+    assert t.solution()[0] == 0
+
     # https://web.stanford.edu/class/msande310/lecture09.pdf
     t = lp.Tableau(lp.array([
         [1, -100, -10, -1, 0, 0, 0,     0],
@@ -174,14 +194,61 @@ def test_dual_basic():
     assert is_optimal_feasible(t)
     assert t._basis == [0, 3, 4, 2, 1]
 
+def test_milp_iter():
+    t = lp.Tableau(_matrix=lp.array([[  1.        ,   0.        ,   0.        ,  -0.        ,
+          0.88888889,  -0.        ,   1.66666667,   0.        ,
+        207.88888889],
+       [  0.        ,   0.        ,   1.        ,   0.        ,
+         -0.11111111,   0.        ,   0.66666667,   0.        ,
+         16.88888889],
+       [  0.        ,   1.        ,   0.        ,   0.        ,
+          0.        ,   0.        ,   1.        ,   0.        ,
+         49.        ],
+       [ -0.        ,  -0.        ,  -0.        ,   1.        ,
+          1.        ,   0.        ,  -3.        ,   0.        ,
+          3.        ],
+       [ -0.        ,  -0.        ,  -0.        ,  -0.        ,
+          0.11111111,   1.        ,  -0.66666667,   0.        ,
+          0.11111111],
+       [  0.        ,  -0.        ,  -0.        ,  -0.        ,
+         -0.11111111,  -0.        ,   0.66666667,   1.        ,
+         -0.11111111]]), _basis=[0, 2, 1, 3, 5, 7])   
+    assert True == lp.run_dual_simplex(t)
 
-#
-# stress optimality/feasibility
-#
+def run_random_tests(iters, bounds, obj, m, n, method):
+    gen = ProblemGenerator(
+        {
+            'constraints_coeffs': 'uniform',
+            'bounds': 'uniform',
+            'obj_coeffs': 'uniform'
+        },
+        {
+            'constraints_coeffs': [-10, 10],
+            'bounds': bounds,
+            'obj_coeffs': obj
+        },
+        m,
+        n
+    )
+    for _ in range(iters):
+        p = gen.value()
+        t = p.to_tableau()
+        or_tools_res, _ = solve_or_tools(p)
+        ok = method(t)
+        assert (or_tools_res is None) == (ok == False), str(p)
+        if or_tools_res is not None:
+            assert comp(or_tools_res, t.solution()[0]), str(p)
 
-def gen_tableau(n_vars: int, n_cons: int):
+
+def test_primal_simplex_random():
+    run_random_tests(1000, [0, 200], [-100, 100], 2, 2, lp.run_primal_simplex)
+    run_random_tests(100,  [0, 200], [-100, 100], 8, 8, lp.run_primal_simplex)
+    run_random_tests(100,  [0, 200], [-100, 100], 30, 30, lp.run_primal_simplex)
+
+
+def test_dual_simplex_random():
     ...
-
-def test_optimality_feasibility():
-    ...
+    # run_random_tests(500, [-100, 100], [0, 200], 2, 2, lp.run_dual_simplex)
+    # run_random_tests(100, [-100, 100], [0, 200], 10, 10, lp.run_dual_simplex)
+    # run_random_tests(100, [0, 200], [-100, 100], 15, 15, lp.run_primal_simplex)
 

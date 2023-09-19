@@ -3,11 +3,12 @@ from problem import Problem
 
 
 # sample code from Google or-tools tutorial
-def solve_or_tools(p: Problem) -> tuple[float | None, str]:
+def solve_or_tools(p: Problem, solver: str = 'SCIP') -> tuple[float | None, str]:
     data = p.to_dict()
     output = "\nOR-TOOLS output:\n"
     # Create the mip solver with the SCIP backend.
-    solver = pywraplp.Solver.CreateSolver('SCIP')
+    # SCIP for MILP problem, CLP for LP problem
+    solver = pywraplp.Solver.CreateSolver(solver)
     if not solver:
         return None
 
