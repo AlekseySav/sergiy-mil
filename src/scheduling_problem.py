@@ -3,7 +3,7 @@ from enum import Enum
 import pydot
 
 from problem import Problem
-from tabular_lp import NDArray, array
+from tabular_lp import array
 
 """ 
 The problem is represented in this article: https://doi.org/10.1080/002075400189004
@@ -20,17 +20,17 @@ The input schema consists of three types of entities:
 The diagram looks like a graph whose nodes consist of states and tasks connected by edges represented by arcs.
 """
 
+INF = 1000000
+
 
 class State:
     name: str
-    initial_stock: float
     min_stock: float
     max_stock: float
     ns: bool  # stays for non-storable
 
-    def __init__(self, name="state0", initial_stock=0, min_stock=0, max_stock=float('+inf'), ns=False):
+    def __init__(self, name="state0", min_stock=0, max_stock=INF, ns=False):
         self.name = name
-        self.initial_stock = initial_stock
         self.min_stock = min_stock
         self.max_stock = max_stock
         self.ns = ns
@@ -60,7 +60,7 @@ class Unit:
     min_batch_size: float
     max_batch_size: float
 
-    def __init__(self, name="unit0", tasks=[], min_batch_size=0, max_batch_size=float('+inf')):
+    def __init__(self, name="unit0", tasks=[], min_batch_size=0, max_batch_size=INF):
         self.name = name
         self.tasks = tasks
         self.min_batch_size = min_batch_size
@@ -90,7 +90,7 @@ class Constraint:
         self.right = r
         self.operator = operator
 
-    def to_arrays(self, variables_count: int) -> list[NDArray]:
+    def to_arrays(self, variables_count: int) -> list[list[float]]:
         if self.operator == Operator.EQ:
             self.operator = Operator.LEQ
             res = [self.to_arrays(variables_count)[0]]
@@ -143,13 +143,13 @@ class STN:
 
         for t in self.tasks:
             task_node = pydot.Node(t.name, shape="box",
-                                   label=f"{t.name}\n({t.batch_processing_time},{t.min_batch_size},{t.max_batch_size})")
+                                   label=f"{t.name}\n({t.batch_processing_time})")
             subgraphs[tasks_to_sg[t]].add_node(task_node)
         for s in subgraphs.values():
             graph.add_subgraph(s)
         for s in self.states:
             graph.add_node(pydot.Node(s.name, shape="diamond",
-                                      label=f"{s.name}\n({s.initial_stock},{s.min_stock},{s.max_stock})",
+                                      label=f"{s.name}\n({s.min_stock},{s.max_stock})",
                                       color=("red" if s.ns else "black")))
         for a in self.arcs:
             graph.add_edge(pydot.Edge(a.from_to[0].name, a.from_to[1].name,
@@ -159,29 +159,29 @@ class STN:
 
 
 class SP(STN):
-    U_e = None
-    U_i = None
-    U = None
-    H = None
-    J_ns = None
-    J_s = None
-    I_in = None
-    I_u = None
-    d = None
-    e = None
-    tau = None
-    alpha_in = None
-    alpha_out = None
-    variables = None
 
     def __init__(self, states: list[State] = [], tasks: list[Task] = [], arcs: list[Arc] = [], units: list[Unit] = [],
                  d: dict[State, list[float]] = {}, e: dict[State, list[float]] = {}):
         super().__init__(states, tasks, arcs, units)
-        self.constraints = None
-        self.x = None
-        self.p = None
-        self.Q = None
-        self.MS = None
+        # self.U_e = None
+        # self.U_i = None
+        # self.U = None
+        # self.H = None
+        # self.J_ns = None
+        # self.J_s = None
+        # self.I_in = None
+        # self.I_u = None
+        # self.d = None
+        # self.e = None
+        # self.tau = None
+        # self.alpha_in = None
+        # self.alpha_out = None
+        # self.variables = None
+        # self.constraints = None
+        # self.x = None
+        # self.p = None
+        # self.Q = None
+        # self.MS = None
         self.d = d
         self.e = e
         for x in d.values():
@@ -189,28 +189,20 @@ class SP(STN):
             break
 
     def generate_dictionaries(self):
-        self.I_u: dict[Unit, set[Task]] = {}  # tasks that can be performed by unit u
+        self.I_u: dict[Unit, set[Task]] = {u: set() for u in self.units}  # tasks that can be performed by unit u
         for u in self.units:
-            s = set()
             for t in u.tasks:
-                s.add(t)
-            self.I_u[u] = s
+                self.I_u[u].add(t)
 
-        self.I_in: dict[State, set[Task]] = {}  # tasks that use product [State] j as input
+        self.I_in: dict[State, set[Task]] = {j: set() for j in self.states}  # tasks that use product [State] j as input
         for a in self.arcs:
             if isinstance(a.from_to[0], State):
-                if a.from_to[0] not in self.I_in.keys():
-                    self.I_in[a.from_to[0]] = {a.from_to[1]}  # TODO : check
-                else:
-                    self.I_in[a.from_to[0]].add(a.from_to[1])
+                self.I_in[a.from_to[0]].add(a.from_to[1])
 
-        self.I_out: dict[State, set[Task]] = {}  # tasks that produce product j
+        self.I_out: dict[State, set[Task]] = {j: set() for j in self.states}  # tasks that produce product j
         for a in self.arcs:
             if isinstance(a.from_to[0], Task):
-                if a.from_to[1] not in self.I_in.keys():
-                    self.I_in[a.from_to[1]] = {a.from_to[0]}  # TODO : check
-                else:
-                    self.I_in[a.from_to[1]].add(a.from_to[0])
+                self.I_out[a.from_to[1]].add(a.from_to[0])
 
         self.J_s: set[State] = set()  # storable products
         self.J_ns: set[State] = set()  # non-storable products
@@ -224,15 +216,12 @@ class SP(STN):
         for u in self.units:
             self.U.add(u)
 
-        self.U_i: dict[Task, set[Unit]] = {}  # units capable of performing task i
+        self.U_i: dict[Task, set[Unit]] = {i: set() for i in self.tasks}  # units capable of performing task i
         for u in self.units:
             for t in u.tasks:
-                if t not in self.U_i.keys():
-                    self.U_i[t] = {u}
-                else:
-                    self.U_i[t].add(u)
+                self.U_i[t].add(u)
 
-        J_e: set[State] = set()  # products with external demand (sum of coefficients on outgoing arcs < 1)
+        J_e: set[State] = set()  # products with external demand
         for s in self.d.keys():
             J_e.add(s)
 
@@ -243,25 +232,35 @@ class SP(STN):
                     for u in self.U_i[a.from_to[0]]:
                         self.U_e.add(u)
 
-        self.alpha_in: dict[Task, dict[State, float]] = {}
+        self.alpha_in: dict[Task, dict[State, float]] = {i: dict() for i in self.tasks}
         self.alpha_out: dict[
-            Task, dict[State, float]] = {}  # fixed proportion of input and output of product j in task i, respectively
+            Task, dict[State, float]] = {i: dict() for i in
+                                         self.tasks}  # fixed proportion of input and output of product j in task i,
+        # respectively
         for a in self.arcs:
             f = 1
             s = self.alpha_in
             if isinstance(a.from_to[0], Task):
                 f = 0
                 s = self.alpha_out
-            if a.from_to[f] not in s.keys():
-                s[a.from_to[f]] = {a.from_to[1 - f]: a.fraction[f]}
-            else:
-                s[a.from_to[f]][a.from_to[1 - f]] = a.fraction[f]
+            s[a.from_to[f]][a.from_to[1 - f]] = a.fraction[f]
 
-        self.tau: dict[Unit, dict[Task, int]] = {}  # processing time per batch of task i at unit u
+        self.tau: dict[Unit, dict[Task, int]] = {u: dict() for u in self.units}
+        # processing time per batch of task i at unit u
         for u in self.units:
             self.tau[u] = {}
             for i in self.I_u[u]:
                 self.tau[u][i] = i.batch_processing_time
+
+        for j in self.states:
+            if j not in self.d.keys():
+                self.d[j] = dict()  # TODO change to list and append (d is dict[State, list[float]])
+                for t in range(self.H):
+                    self.d[j][t] = 0
+            if j not in self.e.keys():
+                self.e[j] = dict()  # TODO same as with d
+                for t in range(self.H):
+                    self.e[j][t] = 0
 
     def generate_variables(self):
         self.variables: list[Variable] = []
@@ -275,22 +274,22 @@ class SP(STN):
         self.Q: dict[Unit: dict[Task: dict[
             int, Variable]]]  # quantity of material undergoing processing of task i at unit u
         # at the beginning of period t (batch size)
-        self.Q = {{u: {i: {t: new_var()
-                           } for t in range(self.H)
-                       } for i in self.tasks
-                   } for u in self.units}
+        self.Q = {u: {i: {t: new_var()
+                          for t in range(self.H)}
+                      for i in self.tasks}
+                  for u in self.units}
 
         self.p: dict[State: dict[int, Variable]]  # stock of product j in J_s at the end of period t (pj0 ˆ given)
-        self.p = {{j: {t: new_var()
-                       } for t in range(self.H)
-                   } for j in self.J_s}
+        self.p = {j: {t: new_var()
+                      for t in range(self.H)
+                      } for j in self.J_s}
 
         self.x: dict[Unit: dict[Task: dict[int, Variable]]]  # = 1, if unit u starts processing task i at the beginning
         # of period t (0, otherwise)
-        self.x = {{u: {i: {t: new_var()
-                           } for t in range(self.H)
-                       } for i in self.tasks
-                   } for u in self.units}
+        self.x = {u: {i: {t: new_var()
+                          for t in range(self.H)
+                          } for i in self.tasks
+                      } for u in self.units}
 
     def generate_constraints(self):
         self.constraints: list[Constraint] = []
@@ -303,172 +302,119 @@ class SP(STN):
             for u in self.U_e:
                 for i in self.I_u[u]:
                     # t*x[uit]-MS <= 1-tau[ui]
-                    l = {
+                    l_hand = {
                         self.MS: -1,
                         self.x[u][i][t]: t
                     }
-                    r = 1 - self.tau[u][i]
-                    add_cons(l, r, Operator.LEQ)
+                    r = -self.tau[u][i]
+                    add_cons(l_hand, r, Operator.LEQ)
 
             # Batch size limits
             for u in self.U:
                 for i in self.I_u[u]:
                     # B_min[u]*x[uit]-Q[uit] <= 0
-                    l = {
+                    l_hand = {
                         self.x[u][i][t]: u.min_batch_size,
                         self.Q[u][i][t]: -1
                     }
                     r = 0
-                    add_cons(l, r, Operator.LEQ)
+                    add_cons(l_hand, r, Operator.LEQ)
 
                     # B_max[u]*x[uit]-Q[uit] >= 0
-                    l = {
+                    l_hand = {
                         self.x[u][i][t]: u.max_batch_size,
                         self.Q[u][i][t]: -1
                     }
-                    add_cons(l, r, Operator.GEQ)
+                    add_cons(l_hand, r, Operator.GEQ)
 
             # Stock balance
             for j in self.J_s:
                 # 0 = - p[jt] + p[j,t-1]+SUM[i in I_out[j]]SUM[u in U_i|t-tau[ui]>=1] Q[u,i,t-tau[ui]] -
                 # - SUM[i in I_in[j]] alpha_in[ij] SUM
-                l = {
+                l_hand = {
                     self.p[j][t]: -1,
-                    self.p[j][t - 1]: 1,
-
                 }
-                l +={{{
-                            self.Q[u][i][t - self.tau[u][i]]: 1
-                            if t - self.tau[u][i] >= 1 else None
-                        } for u in self.U_i[i]
-                    } for i in self.I_out[j]}
-                l += {{{
-                            self.Q[u][i][t]: self.alpha_in[i][j]
-                        } for u in self.U_i[i]
-                    } for i in self.I_in[j]}
-                # TODO : check if += works correctly in here (else use l = {**l, **second_map}
+                if t >= 1:
+                    l_hand[self.p[j][t - 1]] = 1
+                for i in self.I_out[j]:
+                    for u in self.U_i[i]:
+                        if t - self.tau[u][i] == 0:  # TODO : in the article it is >= 1
+                            l_hand[self.Q[u][i][t - self.tau[u][i]]] = self.alpha_out[i][j]  # this is my
+                            # correction of mistake in the article
+                for i in self.I_in[j]:
+                    for u in self.U_i[i]:
+                        l_hand[self.Q[u][i][t]] = -self.alpha_in[i][j]
+
                 r = self.d[j][t] - self.e[j][t]
-                add_cons(l, r, Operator.EQ)
+                add_cons(l_hand, r, Operator.EQ)
 
             # Stock limits
             for j in self.J_s:
                 # p[jt] <= P_max[j]
-                l = {
+                l_hand = {
                     self.p[j][t]: 1
                 }
                 r = j.max_stock
-                add_cons(l, r, Operator.LEQ)
+                add_cons(l_hand, r, Operator.LEQ)
 
             # Production of non-storable goods
+            for j in self.J_ns:
+                l_hand = dict()
+                for i in self.I_out[j]:
+                    for u in self.U_i[i]:
+                        if t - self.tau[u][i] == 0:  # TODO : in the article it is >= 1
+                            l_hand[self.Q[u][i][t - self.tau[u][i]]] = self.alpha_out[i][j]
 
-def test():
-    states = [State()]
-    tasks = [Task()]
-    units = [Unit(tasks=tasks)]
-    arcs = [Arc([states[0], tasks[0]])]
-    stn = STN(states, tasks, arcs, units)
-    stn.draw('0.dot')
+                for i in self.I_in[j]:
+                    for u in self.U_i[i]:
+                        l_hand[self.Q[u][i][t]] = -self.alpha_in[i][j]
 
-    def make_state(x) -> State:
-        if len(x) == 1:
-            return State(name=x[0])
-        if len(x) == 2:
-            return State(name=x[0], max_stock=x[1])
-        if len(x) == 3:
-            return State(name=x[0], min_stock=x[1], max_stock=x[2])
-        return State(x[0], x[1], x[2], x[3], x[4])
+                r = 0
+                add_cons(l_hand, r, Operator.EQ)
 
-    def make_task(x) -> Task:
-        match len(x):
-            case 1:
-                return Task(name=x[0])
-            case 2:
-                return Task(name=x[0], batch_processing_time=x[1])
-            case 3:
-                return Task(name=x[0], batch_processing_time=x[1], max_batch_size=x[2])
-            case 4:
-                return Task(x[0], x[1], x[2], x[3])  # TODO : fix the min max batch size (now they are fields of unit)
+            # Assigning batches to production units
+            for u in self.U:
+                l_hand = dict()
+                for i in self.I_u[u]:
+                    if t >= self.tau[u][i]:
+                        l_hand[self.x[u][i][t - self.tau[u][i]]] = 1
+                r = 1
+                add_cons(l_hand, r, Operator.LEQ)
 
-    def make_unit(x, tasks) -> Unit:
-        return Unit(x[0], [tasks[i] for i in x[1]])  # TODO : fix the min max batch size (now they are fields of unit)
+            # Variable domains
+            # Q[u][i][t] >= 0 - it is already done
+            # p[j][t] >= 0 - it is also done
+            # x[u][i][t] in {0, 1}
+            for u in self.U:
+                for i in self.I_u[u]:
+                    l_hand = {
+                        self.x[u][i][t]: 1
+                    }
+                    r = 1
+                    add_cons(l_hand, r, Operator.LEQ)
+                    r = 0
+                    add_cons(l_hand, r, Operator.GEQ)
 
-    def make_arc(x) -> Arc:
-        match len(x):
-            case 2:
-                return Arc([x[0], x[1]])
-            case 3:
-                return Arc([x[0], x[1]], [x[2], x[2]])
-            case 4:
-                return Arc([x[0], x[1]], [x[2], x[3]])
+    def generate_problem(self):
+        vars_count = len(self.variables)
+        constraint_coeffs: list[list[float]] = []
+        bounds: list[float] = []
+        obj_coeffs: list[float] = []
+        type_constaints: list[bool] = []
 
-    states = list(map(lambda x: make_state(x),
-                      [
-                          ["State 1"],
-                          ["State 2"],
-                          ["State 3"],
-                          ["State 4", 100],
-                          ["State 5", 200],
-                          ["State 6", 0, 0, float('+inf'), True],
-                          ["State 7", 150],
-                          ["State 8", 0, 0, float('+inf'), True],
-                          ["State 9"],
-                          ["State 10"],
-                      ]))
-    tasks = list(map(lambda x: make_task(x),
-                     [
-                         ["Task 1/1", 1, 100],
-                         ["Task 2/2", 2, 50],
-                         ["Task 2/3", 2, 90],
-                         ["Task 3/2", 2, 50],
-                         ["Task 3/3", 2, 90],
-                         ["Task 4/2", 1, 50],
-                         ["Task 4/3", 1, 90],
-                         ["Task 5/4", 1, 200],
-                         ["Task 6/4", 2, 200],
-                     ]))  # TODO : fix the min max batch size (now they are fields of unit)
-    units = list(map(lambda x: make_unit(x, tasks),
-                     [
-                         ["Unit 1", [0]],
-                         ["Unit 2", [1, 3, 5]],
-                         ["Unit 3", [2, 4, 6]],
-                         ["Unit 4", [7, 8]]
-                     ]))  # TODO : fix the min max batch size (now they are fields of unit)
-    arcs = list(map(lambda x: make_arc(x),
-                    [
-                        [states[0], tasks[0]],
-                        [tasks[0], states[3]],
-                        [states[3], tasks[1], 0.4],
-                        [states[3], tasks[2], 0.4],
-                        [states[1], tasks[3], 0.5],
-                        [states[1], tasks[4], 0.5],
-                        [states[2], tasks[3], 0.5],
-                        [states[2], tasks[4], 0.5],
-                        [states[2], tasks[5], 0.2],
-                        [states[2], tasks[6], 0.2],
-                        [tasks[1], states[8], 0.4],
-                        [tasks[2], states[8], 0.4],
-                        [tasks[1], states[6], 0.6],
-                        [tasks[2], states[6], 0.6],
-                        [tasks[3], states[4]],
-                        [tasks[4], states[4]],
-                        [tasks[5], states[5]],
-                        [tasks[6], states[5]],
-                        [states[6], tasks[5], 0.8],
-                        [states[6], tasks[6], 0.8],
-                        [states[4], tasks[1], 0.6],
-                        [states[4], tasks[2], 0.6],
-                        [states[5], tasks[7]],
-                        [tasks[7], states[7], 0.1],
-                        [states[7], tasks[8]],
-                        [tasks[7], states[9], 0.9]
-                    ]))
-    stn = STN(states, tasks, arcs, units)
-    stn.draw('1.dot')
+        for cons in self.constraints:
+            arrs = cons.to_arrays(vars_count)
+            for arr in arrs:
+                constraint_coeffs.append(arr[:-1])
+                bounds.append(arr[-1])
 
-    sp = SP(states, tasks, arcs, units, {states[8]: [1, 1, 1, 1, 1],
-                                         states[9]: [1, 1, 1, 1, 1]},
-            {states[0]: [1000, 1000, 1000, 1000, 1000],
-             states[1]: [1000, 1000, 1000, 1000, 1000],
-             states[2]: [1000, 1000, 1000, 1000, 1000],
-             })
-    sp.generate_dictionaries()
+        obj_coeffs = [0 for _ in range(vars_count)]
+        obj_coeffs[self.MS.index] = -1
+
+        type_constaints = [False for _ in range(vars_count)]
+        for u in self.U:
+            for i in self.I_u[u]:
+                for t in range(self.H):
+                    type_constaints[self.x[u][i][t].index] = True
+
+        self.problem = Problem(constraint_coeffs, bounds, obj_coeffs, type_constaints)
