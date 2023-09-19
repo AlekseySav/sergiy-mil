@@ -44,6 +44,8 @@ import numpy.typing as npt
 from dataclasses import dataclass
 from enum import Enum
 
+EPS = 1e-10
+
 Float = np.float64
 NDArray = npt.NDArray[Float]
 
@@ -128,7 +130,7 @@ def run_primal_simplex(t: Tableau) -> bool:
     def find_entering_variable(t: Tableau) -> int | None:
         r = t._matrix[0, :-1]  # objective coefficients
         index = int(r.argmin())
-        return None if r[index] >= 0 else index
+        return None if r[index] >= -EPS else index
 
     def find_leaving_variable(t: Tableau, v: int) -> int | None:
         col = t._matrix[:, v]
