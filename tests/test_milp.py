@@ -29,8 +29,10 @@ Result after setup:
 
 np.set_printoptions(suppress=True)
 
+
 def comp(res1, res2) -> bool:
-    return abs(res1 - res2) < eps
+
+    return ((res1 is None) == (res2 is None)) and (abs(res1 - res2) < eps)
 
 
 def comp_with_or_tools(p: Problem, gt=gt_simple, ga=ga_simple):
@@ -42,8 +44,8 @@ def comp_with_or_tools(p: Problem, gt=gt_simple, ga=ga_simple):
     or_tools_res, or_tools_output = solve_or_tools(p)
 
     if any([milp_res is not None, or_tools_res is not None]):
-        assert (milp_res is None) == (or_tools_res is None), str(p) + "\n\n" + milp_output + "\n\n" + or_tools_output
-        assert comp(milp_res, or_tools_res), str(p) + "\n\n" + milp_output + "\n\n" + or_tools_output
+        log = str(p) + "\n\n" + milp_output + "\n\n" + or_tools_output
+        assert comp(milp_res, or_tools_res), log
 
 
 def test_milp_simple1():
@@ -136,7 +138,21 @@ def test_with_gt_max():
     comp_with_or_tools(p, gt_max)
 
 
-def test_small_random():
+def stress_comp(gen: ProblemGenerator, runs: int = 1, gt=gt_simple, ga=ga_simple, milp_iterations_limit: int = 100000,
+                milp_branch_bound_limit: int = 100000, ):
+    constraints = [True for _ in range(gen.vars)]
+    for _ in range(runs):
+        p = gen.value()
+        p.type_constraints = constraints
+        t = p.to_tableau()
+        milp_res, milp_output = solve_milp(t, constraints, gt, ga, milp_iterations_limit, milp_branch_bound_limit)
+        or_tools_res, or_tools_output = solve_or_tools(p)
+
+        if any([milp_res is not None, or_tools_res is not None]):
+            assert comp(milp_res, or_tools_res), str(p) + "\n\n" + milp_output + "\n\n" + or_tools_output
+
+
+def test_random_2x2():
     gen = ProblemGenerator(
         {
             'constraints_coeffs': 'uniform',
@@ -151,11 +167,10 @@ def test_small_random():
         2,
         2
     )
-    p = gen.value()
-    comp_with_or_tools(p)
+    stress_comp(gen, 200)
 
 
-def test_mid_random():
+def test_random_10x10():
     gen = ProblemGenerator(
         {
             'constraints_coeffs': 'uniform',
@@ -170,17 +185,4 @@ def test_mid_random():
         10,
         10
     )
-    p = gen.value()
-    comp_with_or_tools(p)
-
-
-def test_many_small_random():
-    for i in range(1000):
-        print(i)
-        test_small_random()
-
-
-def test_many_mid_random():
-    for i in range(100):
-        print(i)
-        test_mid_random()
+    stress_comp(gen, 100)
