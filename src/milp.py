@@ -32,7 +32,7 @@ def check_solution(values: NDArray, constraints: list[bool]) -> list[bool]:
 
 def solve_milp(problem: Tableau, constraints: list[bool],
                get_tableau: func_get_tableau,
-               get_axis: func_get_axis) -> float | None:
+               get_axis: func_get_axis) -> tuple[float | None, str]:
     """
 
     Solves Mixed Integer Linear maximization Problem in Tableau form.
@@ -48,10 +48,13 @@ def solve_milp(problem: Tableau, constraints: list[bool],
         > last column of A >= 0
 
     """
+    output = "\nMILP output:\n"
+
     iteration = 0
     if not make_solution_optimal(problem):
-        return None
-    z_upper, _ = problem.solution()
+        output += 'The problem does not have an optimal solution.\n'
+        return None, output
+    z_upper, best_solution = problem.solution()
     z_lower = Float(0)
     subdivisions = [problem]
     while subdivisions:
@@ -62,19 +65,13 @@ def solve_milp(problem: Tableau, constraints: list[bool],
             # infeasible
             continue
         z, values = problem.solution()
-        # print(problem.variables_constraints)
-        # print(z)
-        # print(z_upper)
         z_upper = max(z_upper, z)
         if z <= z_lower:
             continue
         in_constraints = check_solution(values, constraints)
         if all(in_constraints):
-            print()
-            print('iteration = ', iteration)
-            print('new best solution = ', values[:len(constraints)])
             z_lower = z # TODO : Check
-            print('solution value (floored small variables)= ', z_lower)
+            best_solution = values
             if z_lower == z_upper:
                 break
             else:
@@ -83,7 +80,10 @@ def solve_milp(problem: Tableau, constraints: list[bool],
             split_index = get_axis(problem, in_constraints)
             if split_index is None:
                 continue
-            # print('split, index = ', split_index)
             subdivisions += split_subdivision(problem, split_index)
 
-    return z_lower
+    output += f"solution: \n {best_solution}\n"
+    output += f"solution value = {z_lower}\n"
+    output += f"Problem solved in {iteration} iterations\n"
+
+    return z_lower, output

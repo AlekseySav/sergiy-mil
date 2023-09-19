@@ -47,5 +47,5 @@ def solve_or_tools(p: Problem) -> tuple[float | None, str]:
         output += f'Problem solved in {solver.nodes()} branch-and-bound nodes\n'
         return solver.Objective().Value(), output
     else:
-        output += 'The problem does not have an optimal solution.'
+        output += 'The problem does not have an optimal solution.\n'
         return None, output

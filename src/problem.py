@@ -36,3 +36,7 @@ class Problem:
             basis=basis,
             func=array(copy(self.obj_coeffs)+zeroes[:-1])
         )
+
+    def __str__(self) -> str:
+        return (f'\n\nProblem: \nconstraints coeffs: {self.constraint_coeffs}\nbounds: {self.bounds}\nobj_coeffs: '
+                f'{self.obj_coeffs}')
