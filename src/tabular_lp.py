@@ -135,12 +135,18 @@ def run_primal_simplex(t: Tableau) -> bool:
     def find_leaving_variable(t: Tableau, v: int) -> int | None:
         col = t._matrix[:, v]
         rhs = t._matrix[:, -1]
-        div = np.divide(rhs, col, where=col * rhs > 0, out=np.full_like(col, np.inf))
+        div = np.divide(rhs, col, where=(col * rhs >= 0) & (col != 0), out=np.full_like(col, np.inf))
+        div[(rhs == 0) & (col < 0)] = np.inf
+        div[0] = np.inf
         if (min := div.min()) == np.inf:
             return None  # unbounded/infeasible
+        # if min < EPS and min > -EPS:
+        #     return None # unbounded/infeasible
         r = np.array(t._basis, dtype=Float)
         r[np.where(div != min)] = np.inf
         return int(r.argmin())
+
+    iter = 0
 
     while True:
         if (col := find_entering_variable(t)) is None:
@@ -148,7 +154,8 @@ def run_primal_simplex(t: Tableau) -> bool:
         if (row := find_leaving_variable(t, col)) is None:
             return False
         normalize(t, col, row)
-
+        if (iter := iter + 1) == 10000:
+            raise RuntimeError('too many iterations')
 
 def run_dual_simplex(t: Tableau) -> bool:
     def find_leaving_variable(t: Tableau) -> int | None:

@@ -7,7 +7,7 @@ import lp
 from lp import Tableau, NDArray, Float, array, make_solution_optimal, make_solution_feasible
 from heuristic import func_get_tableau, func_get_axis
 
-eps = 1 / 1000000000
+eps = 1e-5
 
 
 def _is_int(x, delta=eps):
