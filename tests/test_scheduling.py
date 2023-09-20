@@ -10,7 +10,7 @@ def solution_or_tools(factory, d, e, filename: str | None = None) \
     if filename is not None:
         sp.draw('factory_diagrams/' + filename)
 
-    sp.generate_problem()
+    sp._generate_problem()
     vars_values = []
     res, output = or_tools_api.solve_or_tools(sp.problem, result_values=vars_values)
     if res is None:

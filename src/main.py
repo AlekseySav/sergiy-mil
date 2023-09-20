@@ -5,27 +5,27 @@ from scheduling_problem import SP
 
 
 def solve():
-    # factory = tests.factories.ArticleExample1
-    # sp = SP(factory, {
-    #     factory.states[8]: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100],
-    #     factory.states[9]: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100]
-    # },
-    #         {
-    #             factory.states[0]: [1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #             factory.states[1]: [1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #             factory.states[2]: [1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    #         })
+    factory = tests.factories.ArticleExample1
+    sp = SP(factory, {
+        factory.states[8]: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100],
+        factory.states[9]: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100]
+    },
+            {
+                factory.states[0]: [1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                factory.states[1]: [1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                factory.states[2]: [1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            })
 
-    f = tests.factories.PrimitiveFactory
-    sp = SP(f,
-            {f.states[1]: [0, 100]},
-            {f.states[0]: [100, 0]}
-            )
+    # f = tests.factories.PrimitiveFactory
+    # sp = SP(f,
+    #         {f.states[1]: [0, 100]},
+    #         {f.states[0]: [100, 0]}
+    #         )
 
-    sp.generate_problem()
-    t = sp.problem.to_tableau()
-    res, output = solve_milp(t, sp.problem.type_constraints, gt_max, ga_simple)
-    print(res, output)
+    sp.solve(gt_max, ga_simple)
+    print(sp.solution_value)
+    print(sp.solution)
+    print(sp.q_dict_str())
 
 
 if __name__ == '__main__':

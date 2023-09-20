@@ -19,7 +19,7 @@ The input schema consists of three types of entities:
 The diagram looks like a graph whose nodes consist of states and tasks connected by edges represented by arcs.
 """
 
-INF = 1000000
+INF = 1000
 
 
 class State:
@@ -153,6 +153,10 @@ class SP(STN):
     def __init__(self, sup: STN,
                  d=None, e=None):
         super().__init__(other=sup)
+        self.Q_dict = None
+        self.milp_output = None
+        self.solution = None
+        self.solution_value = None
         self.problem = None
         if e is None:
             e = {}
@@ -380,7 +384,7 @@ class SP(STN):
                     r = 0
                     add_cons(l_hand, r, Operator.GEQ)
 
-    def generate_problem(self):
+    def _generate_problem(self):
         self._generate_dictionaries()
         self._generate_variables()
         self._generate_constraints()
@@ -405,3 +409,26 @@ class SP(STN):
                     type_constraints[self.x[u][i][t].index] = True
 
         self.problem = Problem(constraint_coeffs, bounds, obj_coeffs, type_constraints)
+
+    def solve(self, gt, ga):
+        self._generate_problem()
+        self.problem.solve(gt, ga)
+        self.solution_value = self.problem.solution_value
+        self.solution = self.problem.solution
+
+        self.milp_output = self.problem.output
+
+        self.Q_dict = dict()
+        for u in self.U:
+            for i in self.I_u[u]:
+                for t in range(self.H):
+                    self.Q_dict[(u, i, t)] = self.solution[self.Q[u][i][t].index]
+
+    def q_dict_str(self) -> str:
+        res = ""
+        for key in self.Q_dict.keys():
+            u = key[0]
+            i = key[1]
+            t = key[2]
+            res += f'Q[{u.name}][{i.name}][{t}] = {self.Q_dict[key]}\n'
+        return res

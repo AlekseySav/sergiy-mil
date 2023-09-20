@@ -1,4 +1,5 @@
 from copy import deepcopy
+from time import time
 
 import numpy as np
 
@@ -33,10 +34,12 @@ def solve_milp(problem: Tableau, constraints: list[bool],
                get_tableau: func_get_tableau,
                get_axis: func_get_axis,
                it_limit: int = 1000,
-               bb_limit: int = 1000) -> tuple[float | None, str]:
+               bb_limit: int = 1000,
+               solution: list[float] | None = None) -> tuple[float | None, str]:
     """
     Solves Mixed Integer Linear maximization Problem in Tableau form.
     """
+    start = time()
     output = "\nMILP output:\n"
 
     iteration = 0
@@ -49,6 +52,7 @@ def solve_milp(problem: Tableau, constraints: list[bool],
     subdivisions = [problem]
     bb_nodes += 1
     while subdivisions:
+        print(iteration)
         iteration += 1
         if iteration > it_limit:
             return None, output + f'Iterations limit ({it_limit} exceeded\n)'
@@ -78,9 +82,13 @@ def solve_milp(problem: Tableau, constraints: list[bool],
             if bb_nodes > bb_limit:
                 return None, output + f'Branch&bounds nodes limit ({bb_limit} exceeded)\n'
 
+    end = time()
     output += f"solution: \n {best_solution[:len(constraints)]}\n"
     output += f"solution value = {z_lower}\n"
     output += f"Problem solved in {iteration} iterations\n"
     output += f"Problem solved in {bb_nodes} branch&bound nodes\n"
-
+    output += f"Problem solved in {end - start} seconds\n"
+    if solution is not None:
+        for i in best_solution[:len(constraints)]:
+            solution.append(i)
     return z_lower, output
