@@ -26,16 +26,16 @@ style=dashed;
 "Task 6" [label="Task 6\n(2)", shape=box];
 }
 
-"State 1" [color=black, label="State 1\n(0,1000000)", shape=diamond];
-"State 2" [color=black, label="State 2\n(0,1000000)", shape=diamond];
-"State 3" [color=black, label="State 3\n(0,1000000)", shape=diamond];
+"State 1" [color=black, label="State 1\n(0,1000)", shape=diamond];
+"State 2" [color=black, label="State 2\n(0,1000)", shape=diamond];
+"State 3" [color=black, label="State 3\n(0,1000)", shape=diamond];
 "State 4" [color=black, label="State 4\n(0,100)", shape=diamond];
 "State 5" [color=black, label="State 5\n(0,200)", shape=diamond];
-"State 6" [color=red, label="State 6\n(0,1000000)", shape=diamond];
+"State 6" [color=red, label="State 6\n(0,1000)", shape=diamond];
 "State 7" [color=black, label="State 7\n(0,150)", shape=diamond];
-"State 8" [color=red, label="State 8\n(0,1000000)", shape=diamond];
-"State 9" [color=black, label="State 9\n(0,1000000)", shape=diamond];
-"State 10" [color=black, label="State 10\n(0,1000000)", shape=diamond];
+"State 8" [color=red, label="State 8\n(0,1000)", shape=diamond];
+"State 9" [color=black, label="State 9\n(0,1000)", shape=diamond];
+"State 10" [color=black, label="State 10\n(0,1000)", shape=diamond];
 "State 1" -> "Task 1"  [label=""];
 "Task 1" -> "State 4"  [label=""];
 "State 4" -> "Task 2"  [label="0.4"];
