@@ -8,7 +8,7 @@ def solution_or_tools(factory, d, e, filename: str | None = None) \
     sp = SP(factory, d, e)
 
     if filename is not None:
-        sp.draw(filename)
+        sp.draw('factory_diagrams/' + filename)
 
     sp.generate_problem()
     vars_values = []

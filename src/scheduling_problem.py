@@ -24,11 +24,6 @@ INF = 1000000
 
 
 class State:
-    name: str
-    min_stock: float
-    max_stock: float
-    ns: bool  # stays for non-storable
-
     def __init__(self, name="state0", min_stock=0, max_stock=INF, ns=False):
         self.name = name
         self.min_stock = min_stock
@@ -37,30 +32,23 @@ class State:
 
 
 class Task:
-    name: str
-    batch_processing_time: int
-
     def __init__(self, name="task0", batch_processing_time=0):
         self.name = name
         self.batch_processing_time = batch_processing_time
 
 
 class Arc:
-    from_to: tuple[State, Task] | tuple[Task, State]
-    fraction: list[float, float]
-
-    def __init__(self, from_to: tuple[State, Task] | tuple[Task, State], fraction=[1.0, 1.0]):
+    def __init__(self, from_to: tuple[State, Task] | tuple[Task, State], fraction=None):
+        if fraction is None:
+            fraction = [1.0, 1.0]
         self.from_to = from_to
         self.fraction = fraction
 
 
 class Unit:
-    name: str
-    tasks: list[Task]
-    min_batch_size: float
-    max_batch_size: float
-
-    def __init__(self, name="unit0", tasks=[], min_batch_size=0, max_batch_size=INF):
+    def __init__(self, name="unit0", tasks=None, min_batch_size=0, max_batch_size=INF):
+        if tasks is None:
+            tasks = []
         self.name = name
         self.tasks = tasks
         self.min_batch_size = min_batch_size
@@ -68,8 +56,6 @@ class Unit:
 
 
 class Variable:
-    index: int
-
     def __init__(self, i: int):
         self.index = i
 
@@ -81,13 +67,9 @@ class Operator(Enum):
 
 
 class Constraint:
-    left: dict[Variable, float]
-    right: float
-    operator: Operator
-
-    def __init__(self, l: dict[Variable, float], r: float = 0, operator: Operator = Operator.EQ):
-        self.left = l
-        self.right = r
+    def __init__(self, left: dict[Variable, float], right: float = 0, operator: Operator = Operator.EQ):
+        self.left = left
+        self.right = right
         self.operator = operator
 
     def to_arrays(self, variables_count: int) -> list[list[float]]:
@@ -110,13 +92,17 @@ class STN:
     """
     State-Task-Network
     """
-    states: list[State]
-    tasks: list[Task]
-    arcs: list[Arc]
-    units: list[Unit]
 
-    def __init__(self, states: list[State] = [], tasks: list[Task] = [], arcs: list[Arc] = [], units: list[Unit] = [],
+    def __init__(self, states=None, tasks=None, arcs=None, units=None,
                  other=None):
+        if units is None:
+            units = []
+        if arcs is None:
+            arcs = []
+        if tasks is None:
+            tasks = []
+        if states is None:
+            states = []
         if other is not None:
             self.states = other.states
             self.tasks = other.tasks
@@ -168,27 +154,32 @@ class STN:
 class SP(STN):
 
     def __init__(self, sup: STN,
-                 d: dict[State, list[float]] = {}, e: dict[State, list[float]] = {}):
+                 d=None, e=None):
         super().__init__(other=sup)
-        # self.U_e = None
-        # self.U_i = None
-        # self.U = None
-        # self.H = None
-        # self.J_ns = None
-        # self.J_s = None
-        # self.I_in = None
-        # self.I_u = None
-        # self.d = None
-        # self.e = None
-        # self.tau = None
-        # self.alpha_in = None
-        # self.alpha_out = None
-        # self.variables = None
-        # self.constraints = None
-        # self.x = None
-        # self.p = None
-        # self.Q = None
-        # self.MS = None
+        self.problem = None
+        if e is None:
+            e = {}
+        if d is None:
+            d = {}
+        self.U_e = None
+        self.U_i = None
+        self.U = None
+        self.H = None
+        self.J_ns = None
+        self.J_s = None
+        self.I_in = None
+        self.I_u = None
+        self.d = None
+        self.e = None
+        self.tau = None
+        self.alpha_in = None
+        self.alpha_out = None
+        self.variables = None
+        self.constraints = None
+        self.x = None
+        self.p = None
+        self.Q = None
+        self.MS = None
         self.d = d
         self.e = e
         for x in d.values():
@@ -228,14 +219,14 @@ class SP(STN):
             for t in u.tasks:
                 self.U_i[t].add(u)
 
-        J_e: set[State] = set()  # products with external demand
+        j_e: set[State] = set()  # products with external demand
         for s in self.d.keys():
-            J_e.add(s)
+            j_e.add(s)
 
         self.U_e: set[Unit] = set()  # units producing products with external demand
         for a in self.arcs:
             if isinstance(a.from_to[0], Task):
-                if a.from_to[1] in J_e:
+                if a.from_to[1] in j_e:
                     for u in self.U_i[a.from_to[0]]:
                         self.U_e.add(u)
 
@@ -261,13 +252,9 @@ class SP(STN):
 
         for j in self.states:
             if j not in self.d.keys():
-                self.d[j] = dict()  # TODO change to list and append (d is dict[State, list[float]])
-                for t in range(self.H):
-                    self.d[j][t] = 0
+                self.d[j] = [0 for _ in range(self.H)]
             if j not in self.e.keys():
-                self.e[j] = dict()  # TODO same as with d
-                for t in range(self.H):
-                    self.e[j][t] = 0
+                self.e[j] = [0 for _ in range(self.H)]
 
     def _generate_variables(self):
         self.variables: list[Variable] = []
@@ -301,14 +288,13 @@ class SP(STN):
     def _generate_constraints(self):
         self.constraints: list[Constraint] = []
 
-        def add_cons(l, r, o):
-            self.constraints.append(Constraint(l, r, o))
+        def add_cons(left, right, o):
+            self.constraints.append(Constraint(left, right, o))
 
         for t in range(self.H):
             # Makespan
             for u in self.U_e:
                 for i in self.I_u[u]:
-                    # t*x[uit]-MS <= 1-tau[ui]
                     l_hand = {
                         self.MS: -1,
                         self.x[u][i][t]: t
@@ -319,7 +305,6 @@ class SP(STN):
             # Batch size limits
             for u in self.U:
                 for i in self.I_u[u]:
-                    # B_min[u]*x[uit]-Q[uit] <= 0
                     l_hand = {
                         self.x[u][i][t]: u.min_batch_size,
                         self.Q[u][i][t]: -1
@@ -336,8 +321,6 @@ class SP(STN):
 
             # Stock balance
             for j in self.J_s:
-                # 0 = - p[jt] + p[j,t-1]+SUM[i in I_out[j]]SUM[u in U_i|t-tau[ui]>=1] Q[u,i,t-tau[ui]] -
-                # - SUM[i in I_in[j]] alpha_in[ij] SUM
                 l_hand = {
                     self.p[j][t]: -1,
                 }
@@ -346,8 +329,7 @@ class SP(STN):
                 for i in self.I_out[j]:
                     for u in self.U_i[i]:
                         if t - self.tau[u][i] >= 0:
-                            l_hand[self.Q[u][i][t - self.tau[u][i]]] = self.alpha_out[i][j]  # this is my
-                            # correction of mistake in the article
+                            l_hand[self.Q[u][i][t - self.tau[u][i]]] = self.alpha_out[i][j]
                 for i in self.I_in[j]:
                     for u in self.U_i[i]:
                         l_hand[self.Q[u][i][t]] = -self.alpha_in[i][j]
@@ -357,7 +339,6 @@ class SP(STN):
 
             # Stock limits
             for j in self.J_s:
-                # p[jt] <= P_max[j]
                 l_hand = {
                     self.p[j][t]: 1
                 }
@@ -410,8 +391,6 @@ class SP(STN):
         vars_count = len(self.variables)
         constraint_coeffs: list[list[float]] = []
         bounds: list[float] = []
-        obj_coeffs: list[float] = []
-        type_constaints: list[bool] = []
 
         for cons in self.constraints:
             arrs = cons.to_arrays(vars_count)
@@ -422,10 +401,10 @@ class SP(STN):
         obj_coeffs = [0 for _ in range(vars_count)]
         obj_coeffs[self.MS.index] = -1
 
-        type_constaints = [False for _ in range(vars_count)]
+        type_constraints = [False for _ in range(vars_count)]
         for u in self.U:
             for i in self.I_u[u]:
                 for t in range(self.H):
-                    type_constaints[self.x[u][i][t].index] = True
+                    type_constraints[self.x[u][i][t].index] = True
 
-        self.problem = Problem(constraint_coeffs, bounds, obj_coeffs, type_constaints)
+        self.problem = Problem(constraint_coeffs, bounds, obj_coeffs, type_constraints)

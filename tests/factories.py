@@ -20,24 +20,24 @@ def make_task(x) -> Task:
             return Task(name=x[0], batch_processing_time=x[1])
 
 
-def make_unit(x, tasks) -> Unit:
+def make_unit(x, tsks) -> Unit:
     match len(x):
         case 2:
-            return Unit(x[0], [tasks[i] for i in x[1]])
+            return Unit(x[0], [tsks[i] for i in x[1]])
         case 3:
-            return Unit(x[0], [tasks[i] for i in x[1]], max_batch_size=x[2])
+            return Unit(x[0], [tsks[i] for i in x[1]], max_batch_size=x[2])
         case 4:
-            return Unit(x[0], [tasks[i] for i in x[1]], min_batch_size=x[2], max_batch_size=x[3])
+            return Unit(x[0], [tsks[i] for i in x[1]], min_batch_size=x[2], max_batch_size=x[3])
 
 
 def make_arc(x) -> Arc:
     match len(x):
         case 2:
-            return Arc([x[0], x[1]])
+            return Arc((x[0], x[1]))
         case 3:
-            return Arc([x[0], x[1]], [x[2], x[2]])
+            return Arc((x[0], x[1]), [x[2], x[2]])
         case 4:
-            return Arc([x[0], x[1]], [x[2], x[3]])
+            return Arc((x[0], x[1]), [x[2], x[3]])
 
 
 states1 = list(map(lambda x: make_state(x),
@@ -88,31 +88,6 @@ arcs2 = list(map(lambda x: make_arc(x),
                  ]))
 
 TwoUnitsFactory = STN(states2, tasks2, arcs2, units2)
-
-states3 = list(map(lambda x: make_state(x),
-                   [
-                       ["State 1"],
-                       ["State 2", 400],
-                   ]))
-
-tasks3 = list(map(lambda x: make_task(x),
-                  [
-                      ["Task 1", 1]
-                  ]))
-
-units3 = list(map(lambda x: make_unit(x, tasks3),
-                  [
-                      ["Unit 1", [0], 100],
-                      ["Unit 2", [0], 200]
-                  ]))
-
-arcs3 = list(map(lambda x: make_arc(x),
-                 [
-                     [states3[0], tasks3[0]],
-                     [tasks3[0], states3[1]]
-                 ]))
-
-TwoUnitsTwoTasks = STN(states3, tasks3, arcs3, units3)
 
 
 states = list(map(lambda x: make_state(x),

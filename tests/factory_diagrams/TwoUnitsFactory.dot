@@ -1,0 +1,16 @@
+digraph "STN-graph" {
+bgcolor=white;
+concentrate=true;
+rankdir=TB;
+subgraph "cluster_Units: Unit 1, Unit 2, " {
+label="Units: Unit 1, Unit 2";
+shape=box;
+style=dashed;
+"Task 1" [label="Task 1\n(1)", shape=box];
+}
+
+"State 1" [color=black, label="State 1\n(0,1000000)", shape=diamond];
+"State 2" [color=black, label="State 2\n(0,400)", shape=diamond];
+"State 1" -> "Task 1"  [label=""];
+"Task 1" -> "State 2"  [label=""];
+}
