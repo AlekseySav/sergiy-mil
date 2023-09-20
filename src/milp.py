@@ -1,10 +1,9 @@
-import math
 from copy import deepcopy
 
 import numpy as np
 
 import lp
-from lp import Tableau, NDArray, Float, array, make_solution_optimal, make_solution_feasible
+from lp import Tableau, NDArray, Float, make_solution_optimal, make_solution_feasible
 from heuristic import func_get_tableau, func_get_axis
 
 eps = 1e-5
@@ -36,19 +35,7 @@ def solve_milp(problem: Tableau, constraints: list[bool],
                it_limit: int = 1000,
                bb_limit: int = 1000) -> tuple[float | None, str]:
     """
-
     Solves Mixed Integer Linear maximization Problem in Tableau form.
-
-    #### designations:
-        - A = problem.matrix
-        - basis = problem.basis
-
-    #### requirements:
-        - problem should be feasible, i.e.
-        > basis should correspond to s_i variables
-        > A[:,basis] should be E ( matrix, with main diagonal set to ones)
-        > last column of A >= 0
-
     """
     output = "\nMILP output:\n"
 
@@ -64,7 +51,7 @@ def solve_milp(problem: Tableau, constraints: list[bool],
     while subdivisions:
         iteration += 1
         if iteration > it_limit:
-            return None, output + f' Iterations limit ({it_limit} exceeded\n)'
+            return None, output + f'Iterations limit ({it_limit} exceeded\n)'
         problem = get_tableau(subdivisions, constraints)
         subdivisions.remove(problem)
         if not make_solution_feasible(problem):
@@ -76,7 +63,7 @@ def solve_milp(problem: Tableau, constraints: list[bool],
             continue
         in_constraints = check_solution(values, constraints)
         if all(in_constraints):
-            z_lower = z # TODO : Check
+            z_lower = z
             best_solution = values
             if z_lower == z_upper:
                 break
@@ -89,7 +76,7 @@ def solve_milp(problem: Tableau, constraints: list[bool],
             subdivisions += split_subdivision(problem, split_index)
             bb_nodes += 2
             if bb_nodes > bb_limit:
-                return None, output + f' Branch&bounds nodes limit ({bb_limit} exceeded)\n'
+                return None, output + f'Branch&bounds nodes limit ({bb_limit} exceeded)\n'
 
     output += f"solution: \n {best_solution}\n"
     output += f"solution value = {z_lower}\n"
