@@ -112,4 +112,57 @@ arcs3 = list(map(lambda x: make_arc(x),
                      [tasks3[0], states3[1]]
                  ]))
 
-TwoUnitsTwoStates = STN(states3, tasks3, arcs3, units3)
+TwoUnitsTwoTasks = STN(states3, tasks3, arcs3, units3)
+
+
+states = list(map(lambda x: make_state(x),
+                  [
+                      ["State 1"],
+                      ["State 2"],
+                      ["State 3"],
+                      ["State 4", 100],
+                      ["State 5", 200],
+                      ["State 6", 0, INF, True],
+                      ["State 7", 150],
+                      ["State 8", 0, INF, True],
+                      ["State 9"],
+                      ["State 10"],
+                  ]))
+tasks = list(map(lambda x: make_task(x),
+                 [
+                     ["Task 1", 1],
+                     ["Task 2", 2],
+                     ["Task 3", 2],
+                     ["Task 4", 1],
+                     ["Task 5", 1],
+                     ["Task 6", 2],
+                 ]))
+units = list(map(lambda x: make_unit(x, tasks),
+                 [
+                     ["Unit 1", [0], 100],
+                     ["Unit 2", [1, 2, 3], 50],
+                     ["Unit 3", [1, 2, 3], 90],
+                     ["Unit 4", [4, 5], 200]
+                 ]))
+arcs = list(map(lambda x: make_arc(x),
+                [
+                    [states[0], tasks[0]],
+                    [tasks[0], states[3]],
+                    [states[3], tasks[1], 0.4],
+                    [states[1], tasks[2], 0.5],
+                    [states[2], tasks[2], 0.5],
+                    [states[2], tasks[3], 0.2],
+                    [tasks[1], states[8], 0.4],
+                    [tasks[1], states[6], 0.6],
+                    [tasks[2], states[4]],
+                    [tasks[3], states[5]],
+                    [states[6], tasks[3], 0.8],
+                    [states[4], tasks[1], 0.6],
+                    [states[5], tasks[4]],
+                    [tasks[4], states[7], 0.1],
+                    [states[7], tasks[5]],
+                    [tasks[4], states[9], 0.9],
+                    [tasks[5], states[6]]
+                ]))
+
+ArticleExample1 = STN(states, tasks, arcs, units)
