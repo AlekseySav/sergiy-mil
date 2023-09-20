@@ -78,7 +78,7 @@ def solve_milp(problem: Tableau, constraints: list[bool],
             if bb_nodes > bb_limit:
                 return None, output + f'Branch&bounds nodes limit ({bb_limit} exceeded)\n'
 
-    output += f"solution: \n {best_solution}\n"
+    output += f"solution: \n {best_solution[:len(constraints)]}\n"
     output += f"solution value = {z_lower}\n"
     output += f"Problem solved in {iteration} iterations\n"
     output += f"Problem solved in {bb_nodes} branch&bound nodes\n"
