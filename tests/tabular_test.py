@@ -161,6 +161,23 @@ def test_primal_basic():
 
 
 def test_dual_basic():
+    t = lp.Tableau(lp.array([
+        [1, 114, 165, 0, 0, 0],
+        [0,  -6,   2, 1, 0, -18],
+        [0,   7,   8, 0, 1,  64]
+    ]), [0, 3, 4])
+    assert not is_optimal_feasible(t)
+    lp.run_dual_simplex(t)
+
+    t = lp.Tableau(lp.array([
+        [1, 97, 177, 0, 0, 0],
+        [0,  2,  -7, 1, 0, -66],
+        [0,  2,   2, 0, 1,  29]
+    ]), [0, 3, 4])
+    assert not is_optimal_feasible(t)
+    lp.run_dual_simplex(t)
+    assert is_optimal_feasible(t)
+
     # https://youtu.be/ORn1MVC2gq4?si=gwLWGsR5fTf0Eyqn
     t = lp.Tableau(lp.array([
         [1,  3,  4, 0, 0, 0, 0,    0],
@@ -215,7 +232,7 @@ def test_milp_iter():
          -0.11111111]]), _basis=[0, 2, 1, 3, 5, 7])   
     assert True == lp.run_dual_simplex(t)
 
-def run_random_tests(iters, bounds, obj, m, n, method):
+def run_random_tests(iters, bounds, obj, m, n, method, check):
     gen = ProblemGenerator(
         {
             'constraints_coeffs': 'uniform',
@@ -233,6 +250,8 @@ def run_random_tests(iters, bounds, obj, m, n, method):
     for _ in range(iters):
         p = gen.value()
         t = p.to_tableau()
+        if not check(t):
+            continue
         or_tools_res, _ = solve_or_tools(p)
         ok = method(t)
         assert (or_tools_res is None) == (ok == False), str(p)
@@ -241,14 +260,18 @@ def run_random_tests(iters, bounds, obj, m, n, method):
 
 
 def test_primal_simplex_random():
-    run_random_tests(1000, [0, 200], [-100, 100], 2, 2, lp.run_primal_simplex)
-    run_random_tests(100,  [0, 200], [-100, 100], 8, 8, lp.run_primal_simplex)
-    run_random_tests(100,  [0, 200], [-100, 100], 30, 30, lp.run_primal_simplex)
+    check = lambda t: not all(t._matrix[0, :] >= 0)
+    run_random_tests(1000, [0, 10], [-10, 10], 2, 2, lp.run_primal_simplex, check)
+    run_random_tests(1000, [0, 200], [-100, 100], 2, 2, lp.run_primal_simplex, check)
+    run_random_tests(100,  [0, 200], [-100, 100], 8, 8, lp.run_primal_simplex, check)
+    run_random_tests(100,  [0, 200], [-100, 100], 30, 30, lp.run_primal_simplex, check)
 
 
 def test_dual_simplex_random():
-    ...
-    # run_random_tests(500, [-100, 100], [0, 200], 2, 2, lp.run_dual_simplex)
-    # run_random_tests(100, [-100, 100], [0, 200], 10, 10, lp.run_dual_simplex)
-    # run_random_tests(100, [0, 200], [-100, 100], 15, 15, lp.run_primal_simplex)
+    check = lambda t: not all(t._matrix[:, -1] >= 0)
+    run = lambda t: lp.run_dual_simplex(t) # and lp.run_primal_simplex(t)
+    run_random_tests(1000, [-10, 10], [-10, 0], 2, 2, run, check)
+    run_random_tests(1000, [-100, 100], [-200, 0], 2, 2, run, check)
+    run_random_tests(100, [-100, 100], [-200, 0], 10, 10, run, check)
+    run_random_tests(100, [-100, 100], [-200, 0], 30, 30, run, check)
 
