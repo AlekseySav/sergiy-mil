@@ -1,23 +1,25 @@
-from heuristic import gt_min, ga_simple
+import tests.factories
+from heuristic import gt_min, ga_simple, gt_max
 from milp import solve_milp
 from problem import Problem
+from scheduling_problem import SP
 
 
 def solve():
-    p = Problem(
-        [
-            [5, 7, 9, 2, 1],
-            [18, 4, -9, 10, 12],
-            [4, 7, 3, 8, 5],
-            [5, 13, 16, 3, -7],
-        ],
-        [250, 285, 211, 315],
-        [-7, -8, -2, -9, -6]
-    )
-    t = p.to_tableau()
-    constraints = [True, True, True, True, True]
-    my_res = solve_milp(t, constraints=constraints, get_tableau=gt_min, get_axis=ga_simple)
-    print(my_res)
+    factory = tests.factories.ArticleExample1
+    sp = SP(factory, {
+        factory.states[8]: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100],
+        factory.states[9]: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100]
+    },
+            {
+                factory.states[0]: [1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                factory.states[1]: [1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                factory.states[2]: [1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            })
+    sp.generate_problem()
+    t = sp.problem.to_tableau()
+    res, _ = solve_milp(t, sp.problem.type_constraints, gt_max, ga_simple)
+    print(res)
 
 
 if __name__ == '__main__':

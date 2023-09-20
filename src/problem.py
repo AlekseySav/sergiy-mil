@@ -27,10 +27,10 @@ class Problem:
                 'num_vars': self.num_vars, 'num_constraints': self.num_constraints}
         return data
 
-    def to_tableau(self) -> Tableau:  # TODO: fix for non square matrices
+    def to_tableau(self) -> Tableau:
         zeroes = [0 for _ in range(self.num_constraints + 1)]
         matrix = [
-            copy(self.constraint_coeffs[i]) + copy(zeroes) for i in range(self.num_constraints)
+            self.constraint_coeffs[i] + zeroes for i in range(self.num_constraints)
         ]
         for i in range(self.num_constraints):
             matrix[i][self.num_vars + i] = 1

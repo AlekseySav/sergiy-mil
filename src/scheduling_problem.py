@@ -3,7 +3,6 @@ from enum import Enum
 import pydot
 
 from problem import Problem
-from tabular_lp import array
 
 """ 
 The problem is represented in this article: https://doi.org/10.1080/002075400189004
@@ -79,12 +78,10 @@ class Constraint:
             self.operator = Operator.GEQ
             res.append(self.to_arrays(variables_count)[0])
             return res
-        res = array([0 for _ in range(variables_count + 1)])
+        res = [0.0 for _ in range(variables_count + 1)]
         for key in self.left.keys():
-            res[key.index] = self.left[key]
-        res[-1] = self.right
-        if self.operator == Operator.GEQ:
-            res = -res
+            res[key.index] = self.left[key] * (1 if self.operator == Operator.LEQ else -1)
+        res[-1] = self.right * (1 if self.operator == Operator.LEQ else -1)
         return [res]
 
 
