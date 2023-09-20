@@ -261,6 +261,7 @@ def run_random_tests(iters, bounds, obj, m, n, method, check):
 
 def test_primal_simplex_random():
     check = lambda t: not all(t._matrix[0, :] >= 0)
+    run_random_tests(100, [0, 3], [-3, 3], 3, 3, lp.run_primal_simplex, check)
     run_random_tests(1000, [0, 10], [-10, 10], 2, 2, lp.run_primal_simplex, check)
     run_random_tests(1000, [0, 200], [-100, 100], 2, 2, lp.run_primal_simplex, check)
     run_random_tests(100,  [0, 200], [-100, 100], 8, 8, lp.run_primal_simplex, check)
@@ -270,6 +271,7 @@ def test_primal_simplex_random():
 def test_dual_simplex_random():
     check = lambda t: not all(t._matrix[:, -1] >= 0)
     run = lambda t: lp.run_dual_simplex(t) # and lp.run_primal_simplex(t)
+    run_random_tests(100, [-3, 3], [-3, 0], 3, 3, run, check)
     run_random_tests(1000, [-10, 10], [-10, 0], 2, 2, run, check)
     run_random_tests(1000, [-100, 100], [-200, 0], 2, 2, run, check)
     run_random_tests(100, [-100, 100], [-200, 0], 10, 10, run, check)
