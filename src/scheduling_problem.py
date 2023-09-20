@@ -115,11 +115,18 @@ class STN:
     arcs: list[Arc]
     units: list[Unit]
 
-    def __init__(self, states: list[State] = [], tasks: list[Task] = [], arcs: list[Arc] = [], units: list[Unit] = []):
-        self.states = states
-        self.tasks = tasks
-        self.arcs = arcs
-        self.units = units
+    def __init__(self, states: list[State] = [], tasks: list[Task] = [], arcs: list[Arc] = [], units: list[Unit] = [],
+                 other=None):
+        if other is not None:
+            self.states = other.states
+            self.tasks = other.tasks
+            self.arcs = other.arcs
+            self.units = other.units
+        else:
+            self.states = states
+            self.tasks = tasks
+            self.arcs = arcs
+            self.units = units
 
     def draw(self, filename: str):
         tasks_to_units = {}
@@ -160,9 +167,9 @@ class STN:
 
 class SP(STN):
 
-    def __init__(self, states: list[State] = [], tasks: list[Task] = [], arcs: list[Arc] = [], units: list[Unit] = [],
+    def __init__(self, sup: STN,
                  d: dict[State, list[float]] = {}, e: dict[State, list[float]] = {}):
-        super().__init__(states, tasks, arcs, units)
+        super().__init__(other=sup)
         # self.U_e = None
         # self.U_i = None
         # self.U = None
@@ -188,7 +195,7 @@ class SP(STN):
             self.H = len(x)
             break
 
-    def generate_dictionaries(self):
+    def _generate_dictionaries(self):
         self.I_u: dict[Unit, set[Task]] = {u: set() for u in self.units}  # tasks that can be performed by unit u
         for u in self.units:
             for t in u.tasks:
@@ -262,7 +269,7 @@ class SP(STN):
                 for t in range(self.H):
                     self.e[j][t] = 0
 
-    def generate_variables(self):
+    def _generate_variables(self):
         self.variables: list[Variable] = []
 
         def new_var() -> Variable:
@@ -291,7 +298,7 @@ class SP(STN):
                           } for i in self.tasks
                       } for u in self.units}
 
-    def generate_constraints(self):
+    def _generate_constraints(self):
         self.constraints: list[Constraint] = []
 
         def add_cons(l, r, o):
@@ -338,7 +345,7 @@ class SP(STN):
                     l_hand[self.p[j][t - 1]] = 1
                 for i in self.I_out[j]:
                     for u in self.U_i[i]:
-                        if t - self.tau[u][i] == 0:  # TODO : in the article it is >= 1
+                        if t - self.tau[u][i] >= 0:
                             l_hand[self.Q[u][i][t - self.tau[u][i]]] = self.alpha_out[i][j]  # this is my
                             # correction of mistake in the article
                 for i in self.I_in[j]:
@@ -362,7 +369,7 @@ class SP(STN):
                 l_hand = dict()
                 for i in self.I_out[j]:
                     for u in self.U_i[i]:
-                        if t - self.tau[u][i] == 0:  # TODO : in the article it is >= 1
+                        if t - self.tau[u][i] >= 0:
                             l_hand[self.Q[u][i][t - self.tau[u][i]]] = self.alpha_out[i][j]
 
                 for i in self.I_in[j]:
@@ -396,6 +403,10 @@ class SP(STN):
                     add_cons(l_hand, r, Operator.GEQ)
 
     def generate_problem(self):
+        self._generate_dictionaries()
+        self._generate_variables()
+        self._generate_constraints()
+
         vars_count = len(self.variables)
         constraint_coeffs: list[list[float]] = []
         bounds: list[float] = []

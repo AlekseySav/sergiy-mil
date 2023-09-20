@@ -3,7 +3,7 @@ from problem import Problem
 
 
 # sample code from Google or-tools tutorial
-def solve_or_tools(p: Problem, solver: str = 'SCIP') -> tuple[float | None, str]:
+def solve_or_tools(p: Problem, solver: str = 'SCIP', result_values: list | None = None) -> tuple[float | None, str]:
     data = p.to_dict()
     output = "\nOR-TOOLS output:\n"
     # Create the mip solver with the SCIP backend.
@@ -44,6 +44,8 @@ def solve_or_tools(p: Problem, solver: str = 'SCIP') -> tuple[float | None, str]
     status = solver.Solve()
     if status == pywraplp.Solver.OPTIMAL:
         for j in range(data['num_vars']):
+            if result_values is not None:
+                result_values.append(x[j].solution_value())
             output += f"{x[j].name()} = {x[j].solution_value()}\n"
         output += f'solution value = {solver.Objective().Value()}\n\n'
         output += f'Problem solved in {solver.wall_time()} milliseconds\n'
