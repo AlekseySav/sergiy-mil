@@ -3,7 +3,7 @@
 Постановку задачи можно прочитать [тут](scheduling_problem.pdf)
 
 ### class STN
-
+Классы для представления частей химического завода:
 ```python
 class Unit
 class State
@@ -11,19 +11,18 @@ class Task
 class Arc
 ```
 
-Классы для представления частей химического завода
 
+
+Класс представляющий химический завод:
 ```python
 class STN
 ```
 
-Класс представляющий химический завод
+Метод позволяющий сгенерировать '.dot' файл, который рендерится в графическое представление завода (примеры можно посмотреть в [pdf-ке](scheduling_problem.pdf) или в папке [tests/factory_diagrams/](../tests/factory_diagrams/))
 
 ```python
 STN.draw('filename.dot')
 ```
-
-Метод позволяющий сгенерировать '.dot' файл, который рендерится в графическое представление завода (примеры можно посмотреть в [pdf-ке](scheduling_problem.pdf) или в папке [tests/factory_diagrams/](../tests/factory_diagrams/))
 
 > Готовые примеры фабрик: 
 ```python
@@ -35,26 +34,27 @@ tests.factories.ArticleExample1
 ```
 
 ### class SP
+Класс представляющий задачу о составлении расписаний
 
 ```python
 class SP
 ```
-Класс представляющий задачу о составлении расписаний
+Чтобы создать экзмепляр класса нужно передать ему фабрику и списки спроса и предложения
 
 ```python
-factory = STN(...)
-demand = dict(...)
-supply = dict(...)
-sp = SP(factory, demand, supply)
+f = tests.factories.PrimitiveFactory
+sp = SP(f,
+        {f.states[1]: [0, 100, 0, 100]},
+        {f.states[0]: [100, 0, 100, 0]}
+        )
 ```
 
-Чтобы создать экзмепляр класса нужно передать ему фабрику и списки спроса и предложения (пример есть в [main.py](../src/main.py))
+Метод ```solve(get_tableau, get_axis)``` вызывает сведение (приведенное в [pdf-ке](scheduling_problem.pdf)) и MILP солвер с эвристиками get_tableau, get_axis
 
 ```python
 sp.solve(gt_max, ga_simple)
 ```
 
-Метод ```solve(get_tableau, get_axis)``` вызывает сведение (приведенное в [pdf-ке](scheduling_problem.pdf)) и MILP солвер с эвристиками get_tableau, get_axis
 
 Полученное решение хранится в полях ```SP```:
 
