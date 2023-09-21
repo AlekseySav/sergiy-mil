@@ -52,7 +52,6 @@ def solve_milp(problem: Tableau, constraints: list[bool],
     subdivisions = [problem]
     bb_nodes += 1
     while subdivisions:
-        print(iteration)
         iteration += 1
         if iteration > it_limit:
             return None, output + f'Iterations limit ({it_limit} exceeded\n)'

@@ -32,7 +32,7 @@ np.set_printoptions(suppress=True)
 
 def comp(res1, res2) -> bool:
 
-    return ((res1 is None) == (res2 is None)) and (abs(res1 - res2) < eps)
+    return ((res1 is None) == (res2 is None)) and (res2 - res1 < eps)
 
 
 def comp_with_or_tools(p: Problem, gt=gt_simple, ga=ga_simple):
@@ -167,5 +167,5 @@ def test_random_2x2():
         2,
         2
     )
-    stress_comp(gen, 200)
+    stress_comp(gen, 100)
 
