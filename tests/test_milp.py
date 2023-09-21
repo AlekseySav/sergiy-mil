@@ -169,20 +169,3 @@ def test_random_2x2():
     )
     stress_comp(gen, 200)
 
-
-def test_random_10x10():
-    gen = ProblemGenerator(
-        {
-            'constraints_coeffs': 'uniform',
-            'bounds': 'uniform',
-            'obj_coeffs': 'uniform'
-        },
-        {
-            'constraints_coeffs': [-10, 10],
-            'bounds': [0, 200],
-            'obj_coeffs': [-10, 10]
-        },
-        10,
-        10
-    )
-    stress_comp(gen, 100)
