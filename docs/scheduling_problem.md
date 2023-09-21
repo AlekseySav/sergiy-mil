@@ -18,7 +18,7 @@ class Arc
 class STN
 ```
 
-Метод позволяющий сгенерировать '.dot' файл, который рендерится в графическое представление завода (примеры можно посмотреть в [pdf-ке](scheduling_problem.pdf) или в папке [tests/factory_diagrams/](../tests/factory_diagrams/))
+У класса STN есть метод позволяющий сгенерировать '.dot' файл, который рендерится в графическое представление завода (примеры можно посмотреть в [pdf-ке](scheduling_problem.pdf) или в папке [tests/factory_diagrams/](../tests/factory_diagrams/))
 
 ```python
 STN.draw('filename.dot')
