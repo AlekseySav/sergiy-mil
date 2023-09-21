@@ -3,7 +3,7 @@ from copy import copy
 from lp import Tableau, array
 from milp import solve_milp
 
-BIG_M = 1000000
+BIG_M = 1000000000
 
 
 class Problem:
