@@ -154,8 +154,8 @@ def run_primal_simplex(t: Tableau) -> bool:
         if (row := find_leaving_variable(t, col)) is None:
             return False
         normalize(t, col, row)
-        if (iter := iter + 1) == 10000:
-            raise RuntimeError('too many iterations')
+        # if (iter := iter + 1) == 10000:
+        #     raise RuntimeError('too many iterations')
 
 def run_dual_simplex(t: Tableau) -> bool:
     def find_leaving_variable(t: Tableau) -> int | None:
